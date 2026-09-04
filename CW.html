@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive CW Practice Simulator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        :root {
+            --bg-primary: #0b0e14;
+            --bg-secondary: #151921;
+            --bg-accent: #1c232e;
+            --accent-color: #00d2ff;
+            --accent-glow: rgba(0, 210, 255, 0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #2d3748;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --sidebar-width: 280px;
+            --bottom-height: 180px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-color), #7000ff);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-section {
+            margin-bottom: 32px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .slider-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .slider-val {
+            color: var(--accent-color);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--bg-accent);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-glow);
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Main Content Container */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Top Navigation Tabs */
+        .top-nav {
+            height: 64px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            gap: 32px;
+        }
+
+        .tab-item {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            position: relative;
+            padding: 21px 0;
+            transition: color 0.3s;
+        }
+
+        .tab-item:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-item.active {
+            color: var(--accent-color);
+        }
+
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Tab Content Area */
+        .content-area {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background: radial-gradient(circle at top right, rgba(0, 210, 255, 0.03), transparent 40%);
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Panel Headers */
+        .panel-header {
+            margin-bottom: 24px;
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .panel-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Grid Layouts */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .item-card {
+            background-color: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 8px;
+        }
+
+        .item-card:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(0, 210, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .item-card.active {
+            border-color: var(--accent-color);
+            background-color: rgba(0, 210, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.1);
+        }
+
+        .item-char {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .item-morse {
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        /* Buttons Style */
+        .btn {
+            background-color: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            border-color: var(--text-muted);
+            background-color: #242c3a;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background-color: #33dbff;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        /* Setup Form (Tab 3) */
+        .setup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .form-input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .form-input {
+            flex: 1;
+            background-color: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* Active QSO Section */
+        .active-qso {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .active-qso.visible {
+            display: flex;
+        }
+
+        .qso-chat {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            height: 240px;
+            padding: 20px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .qso-msg.system { color: var(--text-secondary); }
+        .qso-msg.user { color: var(--accent-color); }
+        .qso-msg.info { color: var(--warning); font-style: italic; font-size: 12px; }
+
+        .expected-input-box {
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.1), rgba(112, 0, 255, 0.05));
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .expected-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .expected-text {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+        }
+
+        /* Bottom Timeline Area */
+        .bottom-timeline {
+            height: var(--bottom-height);
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 24px;
+            position: relative;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .timeline-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .timeline-stats {
+            display: flex;
+            gap: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            gap: 8px;
+        }
+
+        .stat-label { color: var(--text-muted); }
+        .stat-value { color: #fff; font-weight: 700; }
+
+        .canvas-container {
+            width: 100%;
+            height: 100px;
+            background-color: var(--bg-primary);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #timelineCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .timeline-overlay {
+            position: absolute;
+            top: 0;
+            left: 70%;
+            width: 1px;
+            height: 100%;
+            background-color: var(--warning);
+            box-shadow: 0 0 10px var(--warning);
+            z-index: 5;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Keypad indicator */
+        .key-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+            transition: all 0.1s;
+        }
+        .key-dot.active {
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            transform: scale(1.5);
+        }
+
+        #spaceHint {
+            position: fixed;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Global Controls -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">📡</div>
+            <div class="logo-text">CW TRAINER</div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-title">Global Settings</div>
+            <div class="control-group">
+                <div class="slider-wrapper">
+                    <div class="slider-label">
+                        <span>Speed</span>
+                        <span class="slider-val" id="wpmValueDisplay">20 WPM</span>
+                    </div>
+                    <input type="range" id="wpmSlider" min="10" max="40" value="20">
+                </div>
+                <div class="slider-wrapper">
+                    <div class="slider-label">
+                        <span>Pitch</span>
+                        <span class="slider-val" id="pitchValueDisplay">700 Hz</span>
+                    </div>
+                    <input type="range" id="pitchSlider" min="400" max="1000" value="700">
+                </div>
+                <div class="slider-wrapper">
+                    <div class="slider-label">
+                        <span>Volume</span>
+                        <span class="slider-val" id="volValueDisplay">50%</span>
+                    </div>
+                    <input type="range" id="volSlider" min="0" max="100" value="50">
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-title">Indicators</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div id="keyIndicator" class="key-dot"></div>
+                <span style="font-size: 13px; color: var(--text-secondary);">Key Status (Spacebar)</span>
+            </div>
+        </div>
+
+        <div style="margin-top: auto; font-size: 10px; color: var(--text-muted); text-align: center;">
+            Expert Grade Morse Simulator v2.0
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-container">
+        <!-- Top Nav -->
+        <nav class="top-nav">
+            <div class="tab-item active" data-tab="characters">Characters</div>
+            <div class="tab-item" data-tab="qcodes">Q-Codes & Abbreviations</div>
+            <div class="tab-item" data-tab="qso">Virtual QSO</div>
+        </nav>
+
+        <!-- Dynamic Content Area -->
+        <div class="content-area">
+            
+            <!-- Characters Tab -->
+            <div class="tab-panel active" id="tabContent_characters">
+                <div class="panel-header">
+                    <h2 class="panel-title">Character Practice</h2>
+                    <p class="panel-desc">Master individual letters, numbers, and symbols. Select an item and use the spacebar to match the timing.</p>
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <select id="charCategory" class="form-input" style="width: 200px;">
+                        <option value="letters">English Letters (A-Z)</option>
+                        <option value="numbers">Numbers (0-9)</option>
+                        <option value="special">Special Characters</option>
+                    </select>
+                </div>
+
+                <div class="grid-container" id="characterGrid">
+                    <!-- Dynamic Items -->
+                </div>
+
+                <button class="btn btn-primary" id="playStandardBtn">
+                    <span>🔊 Play Standard Audio</span>
+                </button>
+            </div>
+
+            <!-- Q-Codes Tab -->
+            <div class="tab-panel" id="tabContent_qcodes">
+                <div class="panel-header">
+                    <h2 class="panel-title">Q-Codes & Abbreviations</h2>
+                    <p class="panel-desc">Level up your skills with common radio shorthand and procedures.</p>
+                </div>
+                
+                <div class="grid-container" id="qcodeGrid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));">
+                    <!-- Dynamic Q-Codes -->
+                </div>
+
+                <button class="btn btn-primary" id="playQcodeBtn">
+                    <span>🔊 Play Standard Audio</span>
+                </button>
+            </div>
+
+            <!-- Virtual QSO Tab -->
+            <div class="tab-panel" id="tabContent_qso">
+                
+                <!-- QSO Setup -->
+                <div id="qsoSetupSection">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Virtual QSO Setup</h2>
+                        <p class="panel-desc">Configure your simulated contact scenario.</p>
+                    </div>
+
+                    <div class="setup-grid">
+                        <div class="grid-left">
+                            <div class="form-group">
+                                <label class="form-label">Opponent Callsign</label>
+                                <div class="form-input-row">
+                                    <input type="text" id="oppCall" class="form-input" value="HL1ABC">
+                                    <button class="btn" id="randomizeCallBtn">🎲 Random</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Opponent Name</label>
+                                <input type="text" id="oppName" class="form-input" value="KIM">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Opponent QTH (Location)</label>
+                                <input type="text" id="oppQth" class="form-input" value="SEOUL">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Opponent KDN (Region Code)</label>
+                                <input type="text" id="oppKdn" class="form-input" placeholder="Optional (e.g. L01)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Opponent Rig</label>
+                                <input type="text" id="oppRig" class="form-input" value="IC-7300">
+                            </div>
+                        </div>
+                        <div class="grid-right">
+                            <div class="form-group">
+                                <label class="form-label">My Callsign</label>
+                                <input type="text" id="myCall" class="form-input" value="DS1UZO">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">My Name</label>
+                                <input type="text" id="myName" class="form-input" value="CHOI">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">My QTH</label>
+                                <input type="text" id="myQth" class="form-input" value="BUSAN">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">My KDN</label>
+                                <input type="text" id="myKdn" class="form-input" placeholder="Optional">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">My Rig</label>
+                                <input type="text" id="myRig" class="form-input" value="ID-52 Plus">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 32px; text-align: center;">
+                        <button class="btn btn-primary" style="padding: 16px 48px;" id="startQsoBtn">
+                            <span>🚀 Start Virtual QSO</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active QSO -->
+                <div id="qsoActiveSection" class="active-qso">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                        <h2 class="panel-title" id="qsoStepStatus">Scenario Active</h2>
+                        <button class="btn" id="stopQsoBtn">Stop & Reset</button>
+                    </div>
+
+                    <div class="qso-chat" id="qsoChat">
+                        <!-- History items -->
+                    </div>
+
+                    <div class="expected-input-box">
+                        <div class="expected-label">Wait for your turn or transmit now:</div>
+                        <div class="expected-text" id="expectedText">-</div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Global Bottom Timeline -->
+        <div class="bottom-timeline">
+            <div class="timeline-header">
+                <div class="timeline-title">Real-time Visual Feedback (WPM ±25% Precision)</div>
+                <div class="timeline-stats">
+                    <div class="stat-item"><span class="stat-label">Accuracy:</span> <span class="stat-value" id="statAccuracy">100%</span></div>
+                    <div class="stat-item"><span class="stat-label">Current WPM:</span> <span class="stat-value" id="statWpm">0.0</span></div>
+                    <div class="stat-item"><span class="stat-label">Elements:</span> <span class="stat-value" id="statElements">0/0</span></div>
+                </div>
+            </div>
+            <div class="canvas-container">
+                <canvas id="timelineCanvas"></canvas>
+                <div class="timeline-overlay"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="spaceHint">Hold [Spacebar] to transmit</div>
+
+    <script>
+        // --- DATA ---
+        const MORSE = {
+            'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
+            'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
+            'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+            'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+            '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.', '.': '.-.-.-', ',': '--..--',
+            '?': '..--..', '/': '-..-.', '=': '-...-', '+': '.-.-.', '-': '-....-', '(': '-.--.', ')': '-.--.-',
+            '@': '.--.-.', ' ': ' '
+        };
+
+        const ITEMS = {
+            letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
+            numbers: "0123456789".split(""),
+            special: ".,?/=+()@".split("")
+        };
+
+        const QCODES = [
+            { code: "CQ", meaning: "Calling any station" },
+            { code: "QTH", meaning: "Location is..." },
+            { code: "QSO", meaning: "Direct contact" },
+            { code: "QRV", meaning: "I am ready" },
+            { code: "QSK", meaning: "I can hear you" },
+            { code: "QRL", meaning: "Frequency is busy?" },
+            { code: "QRM", meaning: "Interference" },
+            { code: "QRN", meaning: "Atmospheric noise" },
+            { code: "73", meaning: "Best regards" },
+            { code: "88", meaning: "Love and kisses" },
+            { code: "DE", meaning: "From..." },
+            { code: "K", meaning: "Waiting for reply" },
+            { code: "R", meaning: "Roger / Received" },
+            { code: "SK", meaning: "End of contact" },
+            { code: "AR", meaning: "End of message" }
+        ];
+
+        // --- STATE ---
+        const STATE = {
+            wpm: 20,
+            pitch: 700,
+            volume: 0.5,
+            currentTab: 'characters',
+            selectedItem: 'A',
+            isKeyDown: false,
+            audioCtx: null,
+            osc: null,
+            gain: null,
+            
+            // Timeline
+            blocks: [], // { type: 'sys'|'usr', start: time, duration: time, correct: bool }
+            startTime: performance.now(),
+            
+            // QSO
+            qsoActive: false,
+            qsoStep: 0,
+            qsoParams: null,
+            qsoBeats: [],
+            
+            // Statistics
+            totalUserElements: 0,
+            correctUserElements: 0,
+            userDots: []
+        };
+
+        // --- AUDIO ENGINE ---
+        function initAudio() {
+            if (STATE.audioCtx) return;
+            STATE.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            STATE.gain = STATE.audioCtx.createGain();
+            STATE.gain.gain.setValueAtTime(0, STATE.audioCtx.currentTime);
+            STATE.gain.connect(STATE.audioCtx.destination);
+        }
+
+        function startTone() {
+            initAudio();
+            if (STATE.osc) STATE.osc.stop();
+            STATE.osc = STATE.audioCtx.createOscillator();
+            STATE.osc.type = 'sine';
+            STATE.osc.frequency.setValueAtTime(STATE.pitch, STATE.audioCtx.currentTime);
+            STATE.osc.connect(STATE.gain);
+            STATE.osc.start();
+            
+            // Attack envelope
+            STATE.gain.gain.cancelScheduledValues(STATE.audioCtx.currentTime);
+            STATE.gain.gain.setValueAtTime(STATE.gain.gain.value, STATE.audioCtx.currentTime);
+            STATE.gain.gain.linearRampToValueAtTime(STATE.volume, STATE.audioCtx.currentTime + 0.01);
+        }
+
+        function stopTone() {
+            if (!STATE.gain) return;
+            // Release envelope
+            STATE.gain.gain.cancelScheduledValues(STATE.audioCtx.currentTime);
+            STATE.gain.gain.setValueAtTime(STATE.gain.gain.value, STATE.audioCtx.currentTime);
+            STATE.gain.gain.linearRampToValueAtTime(0, STATE.audioCtx.currentTime + 0.01);
+            setTimeout(() => {
+                if (STATE.osc && !STATE.isKeyDown) {
+                    STATE.osc.stop();
+                    STATE.osc = null;
+                }
+            }, 15);
+        }
+
+        function playText(text, onDone) {
+            initAudio();
+            const dot = 1200 / STATE.wpm;
+            let time = 0;
+            const beats = [];
+
+            text.toUpperCase().split("").forEach(char => {
+                const morse = MORSE[char] || "";
+                if (char === " ") {
+                    time += dot * 4; // Word gap (already 3 from last char gap + 4)
+                } else {
+                    morse.split("").forEach(el => {
+                        const dur = el === '.' ? dot : dot * 3;
+                        beats.push({ type: 'sys', start: time, duration: dur });
+                        
+                        setTimeout(() => {
+                            startTone();
+                            setTimeout(stopTone, dur);
+                        }, time);
+                        
+                        time += dur + dot;
+                    });
+                    time += dot * 2; // Char gap (already 1 from above + 2 = 3)
+                }
+            });
+
+            // Add to timeline
+            const timelineStart = performance.now() - STATE.startTime;
+            beats.forEach(b => {
+                STATE.blocks.push({
+                    ...b,
+                    start: timelineStart + b.start
+                });
+            });
+
+            if (onDone) setTimeout(onDone, time);
+            return beats;
+        }
+
+        // --- UI HELPERS ---
+        function updateTab(tabId) {
+            STATE.currentTab = tabId;
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            
+            document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tabContent_${tabId}`).classList.add('active');
+        }
+
+        function populateGrid(category) {
+            const grid = document.getElementById('characterGrid');
+            grid.innerHTML = '';
+            ITEMS[category].forEach(char => {
+                const card = document.createElement('div');
+                card.className = `item-card ${STATE.selectedItem === char ? 'active' : ''}`;
+                card.innerHTML = `<span class="item-char">${char}</span><span class="item-morse">${MORSE[char]}</span>`;
+                card.onclick = () => {
+                    STATE.selectedItem = char;
+                    document.querySelectorAll('.item-card').forEach(el => el.classList.remove('active'));
+                    card.classList.add('active');
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        function populateQcodes() {
+            const grid = document.getElementById('qcodeGrid');
+            grid.innerHTML = '';
+            QCODES.forEach(q => {
+                const card = document.createElement('div');
+                card.className = `item-card ${STATE.selectedItem === q.code ? 'active' : ''}`;
+                card.innerHTML = `<span class="item-char">${q.code}</span><span class="item-morse" style="font-size: 8px;">${q.meaning}</span>`;
+                card.onclick = () => {
+                    STATE.selectedItem = q.code;
+                    document.querySelectorAll('.item-card').forEach(el => el.classList.remove('active'));
+                    card.classList.add('active');
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        function generateRandomCallsign() {
+            const prefixes = ['HL', 'DS', 'W', 'K', 'N', 'JA', 'G', 'VK', 'VE'];
+            const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+            const digit = Math.floor(Math.random() * 9) + 1;
+            const suffix = Array.from({ length: 2 + Math.floor(Math.random() * 2) }, () => 
+                String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
+            return `${prefix}${digit}${suffix}`;
+        }
+
+        // --- QSO STATE MACHINE ---
+        function getQsoStepText() {
+            const p = STATE.qsoParams;
+            const kdnOpp = p.oppKdn ? `= KDN ${p.oppKdn}` : "";
+            const kdnMy = p.myKdn ? `= KDN ${p.myKdn}` : "";
+
+            switch (STATE.qsoStep) {
+                case 1: return `CQ CQ DE ${p.oppCall} K`;
+                case 2: return `${p.oppCall} DE ${p.myCall} K`;
+                case 3: return `${p.myCall} DE ${p.oppCall} = UR RST 599 = QTH ${p.oppQth} ${kdnOpp} = NAME ${p.oppName} = HW? KN`;
+                case 4: return `R UR RST 599 = QTH ${p.myQth} ${kdnMy} = NAME ${p.myName} = KN`;
+                case 5: return `R TNX INFO = RIG IS ${p.oppRig} = TNX QSO 73 SK`;
+                case 6: return `R RIG IS ${p.myRig} = 73 SK E E`;
+                default: return "";
+            }
+        }
+
+        function advanceQso() {
+            if (!STATE.qsoActive) return;
+            STATE.qsoStep++;
+            if (STATE.qsoStep > 6) {
+                addLog("QSO Completed successfully. 73!", "info");
+                stopQso();
+                return;
+            }
+
+            const isSystem = (STATE.qsoStep % 2 !== 0);
+            const text = getQsoStepText();
+            document.getElementById('qsoStepStatus').innerText = `Step ${STATE.qsoStep} of 6`;
+
+            if (isSystem) {
+                document.getElementById('expectedText').innerText = "Receiving...";
+                addLog(`RX: ${text}`, "system");
+                const beats = playText(text, () => {
+                    setTimeout(advanceQso, 1000);
+                });
+                STATE.qsoBeats = beats;
+            } else {
+                addLog("Waiting for your transmission...", "info");
+                document.getElementById('expectedText').innerText = text;
+                // Prepare beats for user scoring
+                const dot = 1200 / STATE.wpm;
+                let t = 0;
+                STATE.qsoBeats = [];
+                text.toUpperCase().split("").forEach(char => {
+                    if (char === " ") t += dot * 7;
+                    else {
+                        (MORSE[char] || "").split("").forEach(el => {
+                            const dur = el === '.' ? dot : dot * 3;
+                            STATE.qsoBeats.push({ start: t, duration: dur });
+                            t += dur + dot;
+                        });
+                        t += dot * 2;
+                    }
+                });
+                STATE.qsoBeatsRelStart = performance.now() - STATE.startTime;
+            }
+        }
+
+        function addLog(msg, type) {
+            const chat = document.getElementById('qsoChat');
+            const line = document.createElement('div');
+            line.className = `qso-msg ${type}`;
+            line.innerText = msg;
+            chat.appendChild(line);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function stopQso() {
+            STATE.qsoActive = false;
+            STATE.qsoStep = 0;
+            document.getElementById('qsoSetupSection').style.display = 'block';
+            document.getElementById('qsoActiveSection').classList.remove('visible');
+        }
+
+        // --- CANVAS RENDERING ---
+        function render() {
+            const canvas = document.getElementById('timelineCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width = canvas.parentElement.clientWidth;
+            const h = canvas.height = canvas.parentElement.clientHeight;
+
+            const now = performance.now() - STATE.startTime;
+            const pxPerMs = 0.2; // Speed of scrolling
+            const center = w * 0.7; // The yellow line position
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw grid lines
+            ctx.strokeStyle = '#2d3748';
+            ctx.lineWidth = 1;
+            for (let x = center % (1000 * pxPerMs); x < w; x += 1000 * pxPerMs) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+
+            // Draw blocks
+            STATE.blocks.forEach(b => {
+                const x = center + (b.start - now) * pxPerMs;
+                const width = b.duration * pxPerMs;
+                
+                if (x + width < 0 || x > w) return;
+
+                if (b.type === 'sys') {
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(x, 10, width, 35);
+                } else {
+                    ctx.fillStyle = b.correct ? '#10b981' : '#ef4444';
+                    ctx.fillRect(x, 55, width, 35);
+                }
+            });
+
+            requestAnimationFrame(render);
+        }
+
+        // --- INPUT HANDLING ---
+        let keyDownTime = 0;
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space' && !STATE.isKeyDown) {
+                e.preventDefault();
+                STATE.isKeyDown = true;
+                keyDownTime = performance.now();
+                document.getElementById('keyIndicator').classList.add('active');
+                startTone();
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            if (e.code === 'Space') {
+                STATE.isKeyDown = false;
+                document.getElementById('keyIndicator').classList.remove('active');
+                stopTone();
+                
+                const duration = performance.now() - keyDownTime;
+                const start = keyDownTime - STATE.startTime;
+                
+                const dot = 1200 / STATE.wpm;
+                let correct = false;
+
+                // Simple timing check
+                if (STATE.qsoActive && STATE.qsoStep % 2 === 0) {
+                    const relStart = keyDownTime - (STATE.startTime + STATE.qsoBeatsRelStart);
+                    // Find closest expected beat
+                    const target = STATE.qsoBeats.find(b => Math.abs(b.start - relStart) < dot * 2);
+                    if (target) {
+                        const durError = Math.abs(target.duration - duration);
+                        if (durError < target.duration * 0.25) correct = true;
+                    }
+                } else {
+                    // Accuracy against standard for single items
+                    const expected = duration < dot * 2 ? dot : dot * 3;
+                    if (Math.abs(duration - expected) < expected * 0.25) correct = true;
+                }
+
+                STATE.blocks.push({
+                    type: 'usr',
+                    start: start,
+                    duration: duration,
+                    correct: correct
+                });
+
+                // Update Stats
+                STATE.totalUserElements++;
+                if (correct) STATE.correctUserElements++;
+                if (duration < dot * 2) STATE.userDots.push(duration);
+                if (STATE.userDots.length > 5) STATE.userDots.shift();
+
+                updateStats();
+            }
+        });
+
+        function updateStats() {
+            const acc = STATE.totalUserElements > 0 
+                ? Math.round((STATE.correctUserElements / STATE.totalUserElements) * 100) 
+                : 100;
+            
+            let avgWpm = 0;
+            if (STATE.userDots.length > 0) {
+                const avgDot = STATE.userDots.reduce((a,b)=>a+b,0) / STATE.userDots.length;
+                avgWpm = Math.round((1200 / avgDot) * 10) / 10;
+            }
+
+            document.getElementById('statAccuracy').innerText = `${acc}%`;
+            document.getElementById('statWpm').innerText = avgWpm.toFixed(1);
+            document.getElementById('statElements').innerText = `${STATE.correctUserElements}/${STATE.totalUserElements}`;
+        }
+
+        // --- INITIALIZATION ---
+        document.querySelectorAll('.tab-item').forEach(el => {
+            el.onclick = () => updateTab(el.dataset.tab);
+        });
+
+        document.getElementById('charCategory').onchange = (e) => populateGrid(e.target.value);
+        
+        document.getElementById('wpmSlider').oninput = (e) => {
+            STATE.wpm = parseInt(e.target.value);
+            document.getElementById('wpmValueDisplay').innerText = `${STATE.wpm} WPM`;
+        };
+        document.getElementById('pitchSlider').oninput = (e) => {
+            STATE.pitch = parseInt(e.target.value);
+            document.getElementById('pitchValueDisplay').innerText = `${STATE.pitch} Hz`;
+        };
+        document.getElementById('volSlider').oninput = (e) => {
+            STATE.volume = e.target.value / 100 * 0.5;
+            document.getElementById('volValueDisplay').innerText = `${e.target.value}%`;
+        };
+
+        document.getElementById('playStandardBtn').onclick = () => playText(STATE.selectedItem);
+        document.getElementById('playQcodeBtn').onclick = () => playText(STATE.selectedItem);
+        
+        document.getElementById('randomizeCallBtn').onclick = () => {
+            document.getElementById('oppCall').value = generateRandomCallsign();
+        };
+
+        document.getElementById('startQsoBtn').onclick = () => {
+            STATE.qsoParams = {
+                oppCall: document.getElementById('oppCall').value,
+                oppName: document.getElementById('oppName').value,
+                oppQth: document.getElementById('oppQth').value,
+                oppKdn: document.getElementById('oppKdn').value,
+                oppRig: document.getElementById('oppRig').value,
+                myCall: document.getElementById('myCall').value,
+                myName: document.getElementById('myName').value,
+                myQth: document.getElementById('myQth').value,
+                myKdn: document.getElementById('myKdn').value,
+                myRig: document.getElementById('myRig').value,
+            };
+            STATE.qsoActive = true;
+            STATE.qsoStep = 0;
+            document.getElementById('qsoSetupSection').style.display = 'none';
+            document.getElementById('qsoActiveSection').classList.add('visible');
+            document.getElementById('qsoChat').innerHTML = '';
+            addLog("Global QSO Simulation Started.", "info");
+            advanceQso();
+        };
+
+        document.getElementById('stopQsoBtn').onclick = stopQso;
+
+        populateGrid('letters');
+        populateQcodes();
+        render();
+
+    </script>
+</body>
+</html>
