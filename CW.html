@@ -15,7 +15,7 @@
             --accent-glow: rgba(0, 210, 255, 0.4);
             --text-primary: #e2e8f0;
             --text-secondary: #94a3b8;
-            --text-muted: #64748b;
+            --text-muted: #fefefe;
             --border-color: #2d3748;
             --success: #10b981;
             --danger: #ef4444;
@@ -244,7 +244,7 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-            gap: 8px;
+            gap: 2px;
         }
 
         .item-card:hover {
@@ -266,7 +266,7 @@
         }
 
         .item-morse {
-            font-size: 10px;
+            font-size: 16px;
             color: var(--text-muted);
             letter-spacing: 1px;
         }
@@ -506,15 +506,151 @@
             backdrop-filter: blur(4px);
             z-index: 1000;
         }
+
+        /* Responsive & Touch Pad Styles */
+        .tap-pad-container {
+            padding: 0 10px 10px 10px;
+            background-color: var(--bg-primary);
+        }
+        .tap-pad {
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(135deg, var(--bg-accent), #242c3a);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+            color: var(--text-secondary);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tap-pad:active, .tap-pad.active {
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.15), rgba(112, 0, 255, 0.1));
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-glow);
+            transform: scale(0.99);
+        }
+        .tap-pad-text {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .tap-pad-subtext {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        #sidebarToggle {
+            display: none !important;
+        }
+        #sidebarClose {
+            display: none !important;
+        }
+        .sidebar {
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                overflow: hidden;
+            }
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: var(--sidebar-width);
+                transform: translateX(-100%);
+                box-shadow: 20px 0 30px rgba(0, 0, 0, 0.5);
+                z-index: 200;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            #sidebarToggle {
+                display: inline-flex !important;
+            }
+            #sidebarClose {
+                display: inline-flex !important;
+            }
+            .main-container {
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            .top-nav {
+                padding: 0 16px;
+                gap: 16px;
+                justify-content: space-between;
+            }
+            .tab-item {
+                font-size: 13px;
+                padding: 21px 0;
+            }
+            .setup-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .content-area {
+                padding: 16px;
+            }
+            .grid-container {
+                grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+                gap: 8px;
+            }
+            .item-card {
+                padding: 12px 8px;
+                border-radius: 8px;
+            }
+            .item-char {
+                font-size: 16px;
+            }
+            .expected-text {
+                font-size: 20px;
+                word-break: break-all;
+                letter-spacing: 1px;
+            }
+            .expected-input-box {
+                padding: 16px;
+            }
+            .tap-pad-container {
+                padding: 0 16px 12px 16px;
+            }
+            .tap-pad {
+                height: 90px;
+            }
+            #spaceHint {
+                display: none;
+            }
+            :root {
+                --bottom-height: 140px;
+            }
+            .canvas-container {
+                height: 70px;
+            }
+        }
     </style>
 </head>
 <body>
 
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 150; backdrop-filter: blur(2px);"></div>
+
     <!-- Sidebar Global Controls -->
     <div class="sidebar">
-        <div class="logo">
-            <div class="logo-icon">📡</div>
-            <div class="logo-text">CW TRAINER</div>
+        <div class="logo" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-icon">📡</div>
+                <div class="logo-text">CW TRAINER</div>
+            </div>
+            <button id="sidebarClose" class="btn" style="display: none; padding: 4px 8px; font-size: 14px; background: none; border: none; color: var(--text-secondary);">&times;</button>
         </div>
 
         <div class="sidebar-section">
@@ -548,7 +684,7 @@
             <div class="sidebar-title">Indicators</div>
             <div style="display: flex; align-items: center; gap: 12px;">
                 <div id="keyIndicator" class="key-dot"></div>
-                <span style="font-size: 13px; color: var(--text-secondary);">Key Status (Spacebar)</span>
+                <span style="font-size: 13px; color: var(--text-secondary);">Key Status</span>
             </div>
         </div>
 
@@ -561,6 +697,7 @@
     <div class="main-container">
         <!-- Top Nav -->
         <nav class="top-nav">
+            <button class="btn" id="sidebarToggle" style="padding: 6px 12px; font-size: 16px; align-items: center; justify-content: center; background: none; border: none; color: var(--text-primary);">⚙️</button>
             <div class="tab-item active" data-tab="characters">Characters</div>
             <div class="tab-item" data-tab="qcodes">Q-Codes & Abbreviations</div>
             <div class="tab-item" data-tab="qso">Virtual QSO</div>
@@ -576,7 +713,7 @@
                     <p class="panel-desc">Master individual letters, numbers, and symbols. Select an item and use the spacebar to match the timing.</p>
                 </div>
                 
-                <div style="margin-bottom: 24px;">
+                <div style="margin-bottom: 8px;">
                     <select id="charCategory" class="form-input" style="width: 200px;">
                         <option value="letters">English Letters (A-Z)</option>
                         <option value="numbers">Numbers (0-9)</option>
@@ -697,10 +834,18 @@
 
         </div>
 
+        <!-- Tap Pad for Touch Devices -->
+        <div class="tap-pad-container" id="tapPadContainer">
+            <button class="tap-pad" id="tapPad">
+                <span class="tap-pad-text">TAP & HOLD TO TRANSMIT</span>
+                <span class="tap-pad-subtext">터치 / 마우스 클릭으로 전송</span>
+            </button>
+        </div>
+
         <!-- Global Bottom Timeline -->
         <div class="bottom-timeline">
             <div class="timeline-header">
-                <div class="timeline-title">Real-time Visual Feedback (WPM ±25% Precision)</div>
+                <!--<div class="timeline-title">Real-time Visual Feedback (WPM ±25% Precision)</div> -->
                 <div class="timeline-stats">
                     <div class="stat-item"><span class="stat-label">Accuracy:</span> <span class="stat-value" id="statAccuracy">100%</span></div>
                     <div class="stat-item"><span class="stat-label">Current WPM:</span> <span class="stat-value" id="statWpm">0.0</span></div>
@@ -789,6 +934,7 @@
             STATE.gain.connect(STATE.audioCtx.destination);
         }
 
+        // Apply a high pass filter/smooth envelope to prevent clicking
         function startTone() {
             initAudio();
             if (STATE.osc) STATE.osc.stop();
@@ -1015,7 +1161,7 @@
 
                 if (b.type === 'sys') {
                     ctx.fillStyle = '#64748b';
-                    ctx.fillRect(x, 10, width, 35);
+                    ctx.fillRect(x, 10, width, b.duration > 1000 ? 35 : 35); // responsive heights
                 } else {
                     ctx.fillStyle = b.correct ? '#10b981' : '#ef4444';
                     ctx.fillRect(x, 55, width, 35);
@@ -1027,57 +1173,76 @@
 
         // --- INPUT HANDLING ---
         let keyDownTime = 0;
+
+        function handleTransmitStart() {
+            if (STATE.isKeyDown) return;
+            STATE.isKeyDown = true;
+            keyDownTime = performance.now();
+            document.getElementById('keyIndicator').classList.add('active');
+            
+            const tapPad = document.getElementById('tapPad');
+            if (tapPad) tapPad.classList.add('active');
+            
+            startTone();
+        }
+
+        function handleTransmitEnd() {
+            if (!STATE.isKeyDown) return;
+            STATE.isKeyDown = false;
+            document.getElementById('keyIndicator').classList.remove('active');
+            
+            const tapPad = document.getElementById('tapPad');
+            if (tapPad) tapPad.classList.remove('active');
+            
+            stopTone();
+            
+            const duration = performance.now() - keyDownTime;
+            const start = keyDownTime - STATE.startTime;
+            
+            const dot = 1200 / STATE.wpm;
+            let correct = false;
+
+            // Simple timing check
+            if (STATE.qsoActive && STATE.qsoStep % 2 === 0) {
+                const relStart = keyDownTime - (STATE.startTime + STATE.qsoBeatsRelStart);
+                // Find closest expected beat
+                const target = STATE.qsoBeats.find(b => Math.abs(b.start - relStart) < dot * 2);
+                if (target) {
+                    const durError = Math.abs(target.duration - duration);
+                    if (durError < target.duration * 0.25) correct = true;
+                }
+            } else {
+                // Accuracy against standard for single items
+                const expected = duration < dot * 2 ? dot : dot * 3;
+                if (Math.abs(duration - expected) < expected * 0.25) correct = true;
+            }
+
+            STATE.blocks.push({
+                type: 'usr',
+                start: start,
+                duration: duration,
+                correct: correct
+            });
+
+            // Update Stats
+            STATE.totalUserElements++;
+            if (correct) STATE.correctUserElements++;
+            if (duration < dot * 2) STATE.userDots.push(duration);
+            if (STATE.userDots.length > 5) STATE.userDots.shift();
+
+            updateStats();
+        }
+
         window.addEventListener('keydown', e => {
-            if (e.code === 'Space' && !STATE.isKeyDown) {
+            if (e.code === 'Space') {
                 e.preventDefault();
-                STATE.isKeyDown = true;
-                keyDownTime = performance.now();
-                document.getElementById('keyIndicator').classList.add('active');
-                startTone();
+                handleTransmitStart();
             }
         });
 
         window.addEventListener('keyup', e => {
             if (e.code === 'Space') {
-                STATE.isKeyDown = false;
-                document.getElementById('keyIndicator').classList.remove('active');
-                stopTone();
-                
-                const duration = performance.now() - keyDownTime;
-                const start = keyDownTime - STATE.startTime;
-                
-                const dot = 1200 / STATE.wpm;
-                let correct = false;
-
-                // Simple timing check
-                if (STATE.qsoActive && STATE.qsoStep % 2 === 0) {
-                    const relStart = keyDownTime - (STATE.startTime + STATE.qsoBeatsRelStart);
-                    // Find closest expected beat
-                    const target = STATE.qsoBeats.find(b => Math.abs(b.start - relStart) < dot * 2);
-                    if (target) {
-                        const durError = Math.abs(target.duration - duration);
-                        if (durError < target.duration * 0.25) correct = true;
-                    }
-                } else {
-                    // Accuracy against standard for single items
-                    const expected = duration < dot * 2 ? dot : dot * 3;
-                    if (Math.abs(duration - expected) < expected * 0.25) correct = true;
-                }
-
-                STATE.blocks.push({
-                    type: 'usr',
-                    start: start,
-                    duration: duration,
-                    correct: correct
-                });
-
-                // Update Stats
-                STATE.totalUserElements++;
-                if (correct) STATE.correctUserElements++;
-                if (duration < dot * 2) STATE.userDots.push(duration);
-                if (STATE.userDots.length > 5) STATE.userDots.shift();
-
-                updateStats();
+                handleTransmitEnd();
             }
         });
 
@@ -1147,6 +1312,59 @@
         };
 
         document.getElementById('stopQsoBtn').onclick = stopQso;
+
+        // Tapping Pad Events (Touch & Mouse)
+        const tapPad = document.getElementById('tapPad');
+        if (tapPad) {
+            tapPad.addEventListener('touchstart', e => {
+                e.preventDefault();
+                handleTransmitStart();
+            });
+            tapPad.addEventListener('touchend', e => {
+                e.preventDefault();
+                handleTransmitEnd();
+            });
+            tapPad.addEventListener('touchcancel', e => {
+                e.preventDefault();
+                handleTransmitEnd();
+            });
+
+            tapPad.addEventListener('mousedown', e => {
+                if (e.button !== 0) return;
+                handleTransmitStart();
+            });
+            tapPad.addEventListener('mouseup', e => {
+                handleTransmitEnd();
+            });
+            tapPad.addEventListener('mouseleave', e => {
+                handleTransmitEnd();
+            });
+        }
+
+        // Mobile Sidebar Controls
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const closeBtn = document.getElementById('sidebarClose');
+
+        if (toggleBtn && sidebar && overlay) {
+            toggleBtn.onclick = () => {
+                sidebar.classList.add('active');
+                overlay.style.display = 'block';
+            };
+        }
+        if (closeBtn && sidebar && overlay) {
+            closeBtn.onclick = () => {
+                sidebar.classList.remove('active');
+                overlay.style.display = 'none';
+            };
+        }
+        if (overlay && sidebar) {
+            overlay.onclick = () => {
+                sidebar.classList.remove('active');
+                overlay.style.display = 'none';
+            };
+        }
 
         populateGrid('letters');
         populateQcodes();
