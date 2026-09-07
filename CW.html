@@ -36,8 +36,10 @@
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             display: flex;
+            touch-action: manipulation;
         }
 
         /* Sidebar Styling */
@@ -582,6 +584,7 @@
             }
             .main-container {
                 height: 100vh;
+                height: 100dvh;
                 display: flex;
                 flex-direction: column;
             }
@@ -724,10 +727,6 @@
                 <div class="grid-container" id="characterGrid">
                     <!-- Dynamic Items -->
                 </div>
-
-                <button class="btn btn-primary" id="playStandardBtn">
-                    <span>🔊 Play Standard Audio</span>
-                </button>
             </div>
 
             <!-- Q-Codes Tab -->
@@ -740,10 +739,6 @@
                 <div class="grid-container" id="qcodeGrid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));">
                     <!-- Dynamic Q-Codes -->
                 </div>
-
-                <button class="btn btn-primary" id="playQcodeBtn">
-                    <span>🔊 Play Standard Audio</span>
-                </button>
             </div>
 
             <!-- Virtual QSO Tab -->
@@ -1024,6 +1019,7 @@
                     STATE.selectedItem = char;
                     document.querySelectorAll('.item-card').forEach(el => el.classList.remove('active'));
                     card.classList.add('active');
+                    playText(char);
                 };
                 grid.appendChild(card);
             });
@@ -1040,6 +1036,7 @@
                     STATE.selectedItem = q.code;
                     document.querySelectorAll('.item-card').forEach(el => el.classList.remove('active'));
                     card.classList.add('active');
+                    playText(q.code);
                 };
                 grid.appendChild(card);
             });
@@ -1282,9 +1279,6 @@
             document.getElementById('volValueDisplay').innerText = `${e.target.value}%`;
         };
 
-        document.getElementById('playStandardBtn').onclick = () => playText(STATE.selectedItem);
-        document.getElementById('playQcodeBtn').onclick = () => playText(STATE.selectedItem);
-        
         document.getElementById('randomizeCallBtn').onclick = () => {
             document.getElementById('oppCall').value = generateRandomCallsign();
         };
