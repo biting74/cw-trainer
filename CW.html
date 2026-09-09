@@ -1236,7 +1236,7 @@
             
             // Schedule character resolution
             parsingTimeout = setTimeout(() => {
-                const char = MORSE_TO_CHAR[STATE.currentMorse] || '?';
+                const char = MORSE_TO_CHAR[STATE.currentMorse] || '\ufffd';
                 
                 // Continuous accumulation
                 if (STATE.accumulatedText === "" || STATE.accumulatedText === "-") {
@@ -1426,14 +1426,23 @@
             const parsedTextEl = document.getElementById('parsedText');
             const scrollContainer = document.getElementById('parsedScrollContainer');
             
-            // 텍스트 업데이트
-            parsedTextEl.innerText = STATE.accumulatedText || "-";
-            
             // 텍스트가 일정 길이를 넘으면 앞부분 삭제 (예: 50자)
             if (STATE.accumulatedText.length > 50) {
                 STATE.accumulatedText = STATE.accumulatedText.slice(-50);
-                parsedTextEl.innerText = STATE.accumulatedText;
             }
+            
+            // 안전한 렌더링을 위한 HTML 이스케이프 처리
+            const escaped = (STATE.accumulatedText || "-")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+            
+            // \ufffd 특수 문자를 빨간색 볼드체 물음표로 변환
+            const htmlContent = escaped.replace(/\ufffd/g, '<span style="color: #ef4444; font-weight: bold;">?</span>');
+            
+            parsedTextEl.innerHTML = htmlContent;
             
             // 자동 스크롤
             scrollContainer.scrollLeft = scrollContainer.scrollWidth;
@@ -1441,7 +1450,7 @@
 
         document.getElementById('clearOutputBtn').onclick = () => {
             STATE.accumulatedText = "";
-            document.getElementById('parsedText').innerText = "-";
+            document.getElementById('parsedText').innerHTML = "-";
         };
 
         render();
