@@ -838,11 +838,12 @@
         </div>
 
         <!-- Parsed Morse Output -->
-        <div id="parsedOutput" style="padding: 10px 32px; font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--accent-color); background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+        <div id="parsedOutput" style="padding: 10px 32px; font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--accent-color); background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 16px;">
+            <div style="flex-shrink: 0; font-weight: 700; color: var(--text-primary);">Output:</div>
             <div id="parsedScrollContainer" style="flex: 1; overflow-x: auto; white-space: nowrap; scrollbar-width: none;">
-                Output: <span id="parsedText">-</span>
+                <span id="parsedText">-</span>
             </div>
-            <button class="btn" id="clearOutputBtn" style="padding: 4px 12px; font-size: 12px; height: 32px;">Clear</button>
+            <button class="btn" id="clearOutputBtn" style="padding: 4px 12px; font-size: 12px; height: 32px; margin-left: auto;">Clear</button>
         </div>
 
         <!-- Global Bottom Timeline -->
