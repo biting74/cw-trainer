@@ -837,6 +837,14 @@
             </button>
         </div>
 
+        <!-- Parsed Morse Output -->
+        <div id="parsedOutput" style="padding: 10px 32px; font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--accent-color); background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+            <div id="parsedScrollContainer" style="flex: 1; overflow-x: auto; white-space: nowrap; scrollbar-width: none;">
+                Output: <span id="parsedText">-</span>
+            </div>
+            <button class="btn" id="clearOutputBtn" style="padding: 4px 12px; font-size: 12px; height: 32px;">Clear</button>
+        </div>
+
         <!-- Global Bottom Timeline -->
         <div class="bottom-timeline">
             <div class="timeline-header">
@@ -867,6 +875,13 @@
             '?': '..--..', '/': '-..-.', '=': '-...-', '+': '.-.-.', '-': '-....-', '(': '-.--.', ')': '-.--.-',
             '@': '.--.-.', ' ': ' '
         };
+
+        const MORSE_TO_CHAR = {};
+        for (const [char, code] of Object.entries(MORSE)) {
+            if (code !== ' ') {
+                MORSE_TO_CHAR[code] = char;
+            }
+        }
 
         const ITEMS = {
             letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
@@ -903,6 +918,10 @@
             audioCtx: null,
             osc: null,
             gain: null,
+            currentMorse: "",
+            lastInputTime: 0,
+            accumulatedText: "",
+            wordTimeout: null,
             
             // Timeline
             blocks: [], // { type: 'sys'|'usr', start: time, duration: time, correct: bool }
@@ -1170,11 +1189,22 @@
 
         // --- INPUT HANDLING ---
         let keyDownTime = 0;
+        let parsingTimeout = null;
 
         function handleTransmitStart() {
             if (STATE.isKeyDown) return;
             STATE.isKeyDown = true;
             keyDownTime = performance.now();
+            
+            // Parsing Logic: Character gap detection
+            if (keyDownTime - STATE.lastInputTime > (1200 / STATE.wpm) * 3) {
+                STATE.currentMorse = "";
+            }
+            
+            // Clear any pending character or word resolution
+            if (parsingTimeout) clearTimeout(parsingTimeout);
+            if (STATE.wordTimeout) clearTimeout(STATE.wordTimeout);
+
             document.getElementById('keyIndicator').classList.add('active');
             
             const tapPad = document.getElementById('tapPad');
@@ -1195,9 +1225,37 @@
             
             const duration = performance.now() - keyDownTime;
             const start = keyDownTime - STATE.startTime;
+            STATE.lastInputTime = performance.now();
             
             const dot = 1200 / STATE.wpm;
             let correct = false;
+
+            // Parsing: Append symbol to current morse code
+            STATE.currentMorse += (duration < dot * 2) ? '.' : '-';
+            
+            // Schedule character resolution
+            parsingTimeout = setTimeout(() => {
+                const char = MORSE_TO_CHAR[STATE.currentMorse] || '?';
+                
+                // Continuous accumulation
+                if (STATE.accumulatedText === "" || STATE.accumulatedText === "-") {
+                    STATE.accumulatedText = char;
+                } else {
+                    STATE.accumulatedText += char;
+                }
+                
+                updateParsedOutput();
+                STATE.currentMorse = "";
+
+                // Schedule word gap detection (7 dots total: 3 from char gap + 4 more)
+                STATE.wordTimeout = setTimeout(() => {
+                    if (STATE.accumulatedText !== "" && !STATE.accumulatedText.endsWith(' ')) {
+                        STATE.accumulatedText += ' ';
+                        updateParsedOutput();
+                    }
+                }, dot * 4);
+
+            }, dot * 3);
 
             // Simple timing check
             if (STATE.qsoActive && STATE.qsoStep % 2 === 0) {
@@ -1362,6 +1420,29 @@
 
         populateGrid('letters');
         populateQcodes();
+        
+        function updateParsedOutput() {
+            const parsedTextEl = document.getElementById('parsedText');
+            const scrollContainer = document.getElementById('parsedScrollContainer');
+            
+            // 텍스트 업데이트
+            parsedTextEl.innerText = STATE.accumulatedText || "-";
+            
+            // 텍스트가 일정 길이를 넘으면 앞부분 삭제 (예: 50자)
+            if (STATE.accumulatedText.length > 50) {
+                STATE.accumulatedText = STATE.accumulatedText.slice(-50);
+                parsedTextEl.innerText = STATE.accumulatedText;
+            }
+            
+            // 자동 스크롤
+            scrollContainer.scrollLeft = scrollContainer.scrollWidth;
+        }
+
+        document.getElementById('clearOutputBtn').onclick = () => {
+            STATE.accumulatedText = "";
+            document.getElementById('parsedText').innerText = "-";
+        };
+
         render();
 
     </script>
