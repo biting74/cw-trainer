@@ -680,6 +680,13 @@
                     </div>
                     <input type="range" id="volSlider" min="0" max="100" value="50">
                 </div>
+                <div class="slider-wrapper">
+                    <div class="slider-label">
+                        <span>Tolerance</span>
+                        <span class="slider-val" id="tolValueDisplay">15%</span>
+                    </div>
+                    <input type="range" id="tolSlider" min="5" max="50" value="15">
+                </div>
             </div>
         </div>
 
@@ -913,6 +920,7 @@
             wpm: 20,
             pitch: 700,
             volume: 0.5,
+            tolerance: 0.15,
             currentTab: 'characters',
             selectedItem: 'A',
             isKeyDown: false,
@@ -1265,12 +1273,12 @@
                 const target = STATE.qsoBeats.find(b => Math.abs(b.start - relStart) < dot * 2);
                 if (target) {
                     const durError = Math.abs(target.duration - duration);
-                    if (durError < target.duration * 0.25) correct = true;
+                    if (durError < target.duration * STATE.tolerance) correct = true;
                 }
             } else {
                 // Accuracy against standard for single items
                 const expected = duration < dot * 2 ? dot : dot * 3;
-                if (Math.abs(duration - expected) < expected * 0.25) correct = true;
+                if (Math.abs(duration - expected) < expected * STATE.tolerance) correct = true;
             }
 
             STATE.blocks.push({
@@ -1336,6 +1344,10 @@
         document.getElementById('volSlider').oninput = (e) => {
             STATE.volume = e.target.value / 100 * 0.5;
             document.getElementById('volValueDisplay').innerText = `${e.target.value}%`;
+        };
+        document.getElementById('tolSlider').oninput = (e) => {
+            STATE.tolerance = e.target.value / 100;
+            document.getElementById('tolValueDisplay').innerText = `${e.target.value}%`;
         };
 
         document.getElementById('randomizeCallBtn').onclick = () => {
