@@ -494,21 +494,6 @@
             transform: scale(1.5);
         }
 
-        #spaceHint {
-            position: fixed;
-            bottom: 200px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 20px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            pointer-events: none;
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-        }
-
         /* Responsive & Touch Pad Styles */
         .tap-pad-container {
             padding: 0 10px 10px 10px;
@@ -516,7 +501,7 @@
         }
         .tap-pad {
             width: 100%;
-            height: 30px;
+            height: 45px;
             background: linear-gradient(135deg, var(--bg-accent), #242c3a);
             border: 2px dashed var(--border-color);
             border-radius: 12px;
@@ -709,6 +694,8 @@
 
         <div style="margin-top: auto; font-size: 10px; color: var(--text-muted); text-align: center;" data-i18n="sidebar_version">
             Expert Grade Morse Simulator v2.5
+            <br><br>
+            Designed & Developed by DS1UZO, 6K2MAM
         </div>
     </div>
 
@@ -849,7 +836,7 @@
         <div class="tap-pad-container" id="tapPadContainer">
             <button class="tap-pad" id="tapPad">
                 <span class="tap-pad-text">눌러서 전송</span>
-                <span class="tap-pad-subtext">터치 / 마우스 클릭으로 전송</span>
+                <span class="tap-pad-subtext">스페이스바 / 터치 / 마우스 클릭으로 전송</span>
             </button>
         </div>
 
@@ -865,7 +852,7 @@
         <!-- Global Bottom Timeline -->
         <div class="bottom-timeline">
             <div class="timeline-header">
-                <!--<div class="timeline-title">Real-time Visual Feedback (WPM ±25% Precision)</div> -->
+                <div class="timeline-title">Real-time Visual Feedback<br>(WPM ±25% Precision)</div>
                 <div class="timeline-stats">
                     <div class="stat-item"><span class="stat-label">정확도:</span> <span class="stat-value" id="statAccuracy">100%</span></div>
                     <div class="stat-item"><span class="stat-label">현재 WPM:</span> <span class="stat-value" id="statWpm">0.0</span></div>
@@ -878,8 +865,6 @@
             </div>
         </div>
     </div>
-
-    <div id="spaceHint">스페이스바를 눌러 전송하세요</div>
 
     <script>
         // --- DATA ---
