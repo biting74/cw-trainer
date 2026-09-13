@@ -825,6 +825,12 @@
                     <div class="expected-input-box">
                         <div class="expected-label" data-i18n="expected_label">당신의 차례를 기다리거나 전송하세요:</div>
                         <div class="expected-text" id="expectedText">-</div>
+                        <div id="expectedMorse" style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--text-secondary);">-</div>
+                        <div style="margin-top: 12px; font-size: 12px;">
+                            <label>
+                                <input type="checkbox" id="showMorseToggle" checked> <span data-i18n="label_show_morse">모스 코드 보기</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -906,6 +912,11 @@
                 qso_active_status: "교신 진행 중",
                 btn_stop_qso: "중단 및 초기화",
                 expected_label: "당신의 차례를 기다리거나 전송하세요:",
+                label_show_morse: "모스 코드 보기",
+                log_start_qso: "가상 QSO를 시작합니다.",
+                log_end_qso: "교신을 성공적으로 마쳤습니다. 73!",
+                status_receiving: "수신 중...",
+                status_waiting: "송신을 기다리는 중...",
                 tap_pad_main: "눌러서 전송",
                 tap_pad_sub: "스페이스바 / 터치 / 마우스 클릭으로 전송",
                 output_label: "출력:",
@@ -954,6 +965,11 @@
                 qso_active_status: "Scenario Active",
                 btn_stop_qso: "Stop & Reset",
                 expected_label: "Wait for your turn or transmit now:",
+                label_show_morse: "Show Morse Code",
+                log_start_qso: "Starting Virtual QSO...",
+                log_end_qso: "QSO finished successfully. 73!",
+                status_receiving: "Receiving...",
+                status_waiting: "Waiting for transmission...",
                 tap_pad_main: "TAP & HOLD TO TRANSMIT",
                 tap_pad_sub: "Spacebar / Touch / Mouse Click to transmit",
                 output_label: "Output:",
@@ -968,6 +984,7 @@
         };
 
         function updateUI(lang) {
+            STATE.lang = lang;
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) {
@@ -1211,45 +1228,66 @@
 
         function advanceQso() {
             if (!STATE.qsoActive) return;
+            const lang = STATE.lang || 'ko';
+            const t = TRANSLATIONS[lang];
+
             STATE.qsoStep++;
             if (STATE.qsoStep > 6) {
-                addLog("교신을 성공적으로 마쳤습니다. 73!", "info");
+                addLog(t.log_end_qso, "info");
                 stopQso();
                 return;
             }
 
             const isSystem = (STATE.qsoStep % 2 !== 0);
             const text = getQsoStepText();
-            document.getElementById('qsoStepStatus').innerText = `단계 ${STATE.qsoStep} / 6`;
+            document.getElementById('qsoStepStatus').innerText = `${lang === 'ko' ? '단계' : 'Step'} ${STATE.qsoStep} / 6`;
+
+            // Update text and morse
+            const expectedTextEl = document.getElementById('expectedText');
+            const expectedMorseEl = document.getElementById('expectedMorse');
+            const showMorse = document.getElementById('showMorseToggle').checked;
 
             if (isSystem) {
-                document.getElementById('expectedText').innerText = "수신 중...";
+                expectedTextEl.innerText = t.status_receiving;
+                expectedMorseEl.innerText = "";
                 addLog(`RX: ${text}`, "system");
                 const beats = playText(text, () => {
                     setTimeout(advanceQso, 1000);
                 });
                 STATE.qsoBeats = beats;
             } else {
-                addLog("송신을 기다리는 중...", "info");
-                document.getElementById('expectedText').innerText = text;
+                addLog(t.status_waiting, "info");
+                expectedTextEl.innerText = text;
+
+                // Generate morse for the text
+                const morseText = text.split("").map(char => MORSE[char] || "").join(" ");
+                expectedMorseEl.innerText = showMorse ? morseText : "";
+
                 // Prepare beats for user scoring
                 const dot = 1200 / STATE.wpm;
-                let t = 0;
+                let t_beat = 0;
                 STATE.qsoBeats = [];
                 text.toUpperCase().split("").forEach(char => {
-                    if (char === " ") t += dot * 7;
+                    if (char === " ") t_beat += dot * 7;
                     else {
                         (MORSE[char] || "").split("").forEach(el => {
                             const dur = el === '.' ? dot : dot * 3;
-                            STATE.qsoBeats.push({ start: t, duration: dur });
-                            t += dur + dot;
+                            STATE.qsoBeats.push({ start: t_beat, duration: dur });
+                            t_beat += dur + dot;
                         });
-                        t += dot * 2;
+                        t_beat += dot * 2;
                     }
                 });
                 STATE.qsoBeatsRelStart = performance.now() - STATE.startTime;
             }
         }
+
+        // Add listener for toggle
+        document.getElementById('showMorseToggle').onchange = (e) => {
+            const text = document.getElementById('expectedText').innerText;
+            const morseText = text.split("").map(char => MORSE[char] || "").join(" ");
+            document.getElementById('expectedMorse').innerText = e.target.checked ? morseText : "";
+        };
 
         function addLog(msg, type) {
             const chat = document.getElementById('qsoChat');
@@ -1489,7 +1527,8 @@
             document.getElementById('qsoSetupSection').style.display = 'none';
             document.getElementById('qsoActiveSection').classList.add('visible');
             document.getElementById('qsoChat').innerHTML = '';
-            addLog("가상 QSO를 시작합니다.", "info");
+            const lang = STATE.lang || 'ko';
+            addLog(TRANSLATIONS[lang].log_start_qso, "info");
             advanceQso();
         };
 
