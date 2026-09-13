@@ -1487,7 +1487,7 @@
             STATE.qsoActive = true;
             STATE.qsoStep = 0;
             document.getElementById('qsoSetupSection').style.display = 'none';
-            document.getElementById('qsoActiveSection').classList.remove('visible');
+            document.getElementById('qsoActiveSection').classList.add('visible');
             document.getElementById('qsoChat').innerHTML = '';
             addLog("가상 QSO를 시작합니다.", "info");
             advanceQso();
