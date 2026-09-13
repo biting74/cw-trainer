@@ -716,12 +716,12 @@
             <div class="tab-panel active" id="tabContent_characters">
                 <div class="panel-header">
                     <h2 class="panel-title" data-i18n="char_title">문자 연습</h2>
-                    <p class="panel-desc" data-i18n="char_desc">개별 문자, 숫자, 특수 기호를 연습하세요. 항목을 선택하고 스페이스바로 타이밍을 맞추세요.</p>
+                    <p class="panel-desc" data-i18n="char_desc">연습할 항목(문자, 숫자, 특수 기호)을 선택합니다. 신호 타이밍에 맞춰 모스 부호 전송 연습을 진행합니다.</p>
                 </div>
                 
                 <div style="margin-bottom: 8px;">
                     <select id="charCategory" class="form-input" style="width: 200px;">
-                        <option value="letters" data-i18n="cat_letters">알파벳 (A-Z)</option>
+                        <option value="letters" data-i18n="cat_letters">문자 (A-Z)</option>
                         <option value="numbers" data-i18n="cat_numbers">숫자 (0-9)</option>
                         <option value="special" data-i18n="cat_special">특수 기호</option>
                     </select>
@@ -735,8 +735,8 @@
             <!-- Q-Codes Tab -->
             <div class="tab-panel" id="tabContent_qcodes">
                 <div class="panel-header">
-                    <h2 class="panel-title">Q-코드 및 약어</h2>
-                    <p class="panel-desc">일반적인 무선 약어와 절차를 숙달하여 기술을 향상하세요.</p>
+                    <h2 class="panel-title" data-i18n="qcode_title">Q-코드 및 약어</h2>
+                    <p class="panel-desc" data-i18n="qcode_desc">일반적인 무선 약어와 절차를 숙달하여 기술을 향상하세요.</p>
                 </div>
                 
                 <div class="grid-container" id="qcodeGrid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));">
@@ -750,62 +750,62 @@
                 <!-- QSO Setup -->
                 <div id="qsoSetupSection">
                     <div class="panel-header">
-                        <h2 class="panel-title">가상 QSO 설정</h2>
-                        <p class="panel-desc">연습할 가상 교신 환경을 설정하세요.</p>
+                        <h2 class="panel-title" data-i18n="qso_setup_title">가상 QSO 설정</h2>
+                        <p class="panel-desc" data-i18n="qso_setup_desc">연습할 가상 교신 환경을 설정하세요.</p>
                     </div>
 
                     <div class="setup-grid">
                         <div class="grid-left">
                             <div class="form-group">
-                                <label class="form-label">상대 콜사인</label>
+                                <label class="form-label" data-i18n="label_opp_call">상대 콜사인</label>
                                 <div class="form-input-row">
                                     <input type="text" id="oppCall" class="form-input" value="HL1ABC">
-                                    <button class="btn" id="randomizeCallBtn">🎲 랜덤</button>
+                                    <button class="btn" id="randomizeCallBtn" data-i18n="btn_random">🎲 랜덤</button>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">상대 이름</label>
+                                <label class="form-label" data-i18n="label_opp_name">상대 이름</label>
                                 <input type="text" id="oppName" class="form-input" value="KIM">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">상대 QTH (위치)</label>
+                                <label class="form-label" data-i18n="label_opp_qth">상대 QTH (위치)</label>
                                 <input type="text" id="oppQth" class="form-input" value="SEOUL">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">상대 KDN (지역 코드)</label>
-                                <input type="text" id="oppKdn" class="form-input" placeholder="선택 (예: L01)">
+                                <label class="form-label" data-i18n="label_opp_kdn">상대 KDN (지역 코드)</label>
+                                <input type="text" id="oppKdn" class="form-input" data-i18n-placeholder="kdn_placeholder" placeholder="선택 (예: L01)">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">상대 무전기</label>
+                                <label class="form-label" data-i18n="label_opp_rig">상대 무전기</label>
                                 <input type="text" id="oppRig" class="form-input" value="IC-7300">
                             </div>
                         </div>
                         <div class="grid-right">
                             <div class="form-group">
-                                <label class="form-label">내 콜사인</label>
+                                <label class="form-label" data-i18n="label_my_call">내 콜사인</label>
                                 <input type="text" id="myCall" class="form-input" value="6K1XYZ">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">내 이름</label>
+                                <label class="form-label" data-i18n="label_my_name">내 이름</label>
                                 <input type="text" id="myName" class="form-input" value="CHOI">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">내 QTH</label>
+                                <label class="form-label" data-i18n="label_my_qth">내 QTH</label>
                                 <input type="text" id="myQth" class="form-input" value="BUSAN">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">내 KDN</label>
-                                <input type="text" id="myKdn" class="form-input" placeholder="선택">
+                                <label class="form-label" data-i18n="label_my_kdn">내 KDN</label>
+                                <input type="text" id="myKdn" class="form-input" data-i18n-placeholder="kdn_my_placeholder" placeholder="선택">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">내 무전기</label>
+                                <label class="form-label" data-i18n="label_my_rig">내 무전기</label>
                                 <input type="text" id="myRig" class="form-input" value="ID-52 Plus">
                             </div>
                         </div>
                     </div>
 
                     <div style="margin-top: 32px; text-align: center;">
-                        <button class="btn btn-primary" style="padding: 16px 48px;" id="startQsoBtn">
+                        <button class="btn btn-primary" style="padding: 16px 48px;" id="startQsoBtn" data-i18n="btn_start_qso">
                             <span>🚀 가상 QSO 시작</span>
                         </button>
                     </div>
@@ -814,8 +814,8 @@
                 <!-- Active QSO -->
                 <div id="qsoActiveSection" class="active-qso">
                     <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                        <h2 class="panel-title" id="qsoStepStatus">교신 진행 중</h2>
-                        <button class="btn" id="stopQsoBtn">중단 및 초기화</button>
+                        <h2 class="panel-title" id="qsoStepStatus" data-i18n="qso_active_status">교신 진행 중</h2>
+                        <button class="btn" id="stopQsoBtn" data-i18n="btn_stop_qso">중단 및 초기화</button>
                     </div>
 
                     <div class="qso-chat" id="qsoChat">
@@ -823,7 +823,7 @@
                     </div>
 
                     <div class="expected-input-box">
-                        <div class="expected-label">당신의 차례를 기다리거나 전송하세요:</div>
+                        <div class="expected-label" data-i18n="expected_label">당신의 차례를 기다리거나 전송하세요:</div>
                         <div class="expected-text" id="expectedText">-</div>
                     </div>
                 </div>
@@ -835,18 +835,18 @@
         <!-- Tap Pad for Touch Devices -->
         <div class="tap-pad-container" id="tapPadContainer">
             <button class="tap-pad" id="tapPad">
-                <span class="tap-pad-text">눌러서 전송</span>
-                <span class="tap-pad-subtext">스페이스바 / 터치 / 마우스 클릭으로 전송</span>
+                <span class="tap-pad-text" data-i18n="tap_pad_main">눌러서 전송</span>
+                <span class="tap-pad-subtext" data-i18n="tap_pad_sub">스페이스바 / 터치 / 마우스 클릭으로 전송</span>
             </button>
         </div>
 
         <!-- Parsed Morse Output -->
         <div id="parsedOutput" style="padding: 10px 32px; font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--accent-color); background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 16px;">
-            <div style="flex-shrink: 0; font-weight: 700; color: var(--text-primary);">출력:</div>
+            <div style="flex-shrink: 0; font-weight: 700; color: var(--text-primary);" data-i18n="output_label">출력:</div>
             <div id="parsedScrollContainer" style="flex: 1; overflow-x: auto; white-space: nowrap; scrollbar-width: none;">
                 <span id="parsedText">-</span>
             </div>
-            <button class="btn" id="clearOutputBtn" style="padding: 4px 12px; font-size: 12px; height: 32px; margin-left: auto;">지우기</button>
+            <button class="btn" id="clearOutputBtn" style="padding: 4px 12px; font-size: 12px; height: 32px; margin-left: auto;" data-i18n="btn_clear">지우기</button>
         </div>
 
         <!-- Global Bottom Timeline -->
@@ -854,9 +854,9 @@
             <div class="timeline-header">
                 <div class="timeline-title">Real-time Visual Feedback<br>(WPM ±25% Precision)</div>
                 <div class="timeline-stats">
-                    <div class="stat-item"><span class="stat-label">정확도:</span> <span class="stat-value" id="statAccuracy">100%</span></div>
-                    <div class="stat-item"><span class="stat-label">현재 WPM:</span> <span class="stat-value" id="statWpm">0.0</span></div>
-                    <div class="stat-item"><span class="stat-label">요소:</span> <span class="stat-value" id="statElements">0/0</span></div>
+                    <div class="stat-item"><span class="stat-label" data-i18n="stat_accuracy">정확도:</span> <span class="stat-value" id="statAccuracy">100%</span></div>
+                    <div class="stat-item"><span class="stat-label" data-i18n="stat_wpm">현재 WPM:</span> <span class="stat-value" id="statWpm">0.0</span></div>
+                    <div class="stat-item"><span class="stat-label" data-i18n="stat_elements">요소:</span> <span class="stat-value" id="statElements">0/0</span></div>
                 </div>
             </div>
             <div class="canvas-container">
@@ -883,8 +883,8 @@
                 tab_qcodes: "Q-코드/약어",
                 tab_qso: "가상 QSO",
                 char_title: "문자 연습",
-                char_desc: "개별 문자, 숫자, 특수 기호를 연습하세요. 항목을 선택하고 스페이스바로 타이밍을 맞추세요.",
-                cat_letters: "알파벳 (A-Z)",
+                char_desc: "연습할 항목(문자, 숫자, 특수 기호)을 선택합니다. 신호 타이밍에 맞춰 모스 부호 전송 연습을 진행합니다.",
+                cat_letters: "문자 (A-Z)",
                 cat_numbers: "숫자 (0-9)",
                 cat_special: "특수 기호",
                 qcode_title: "Q-코드 및 약어",
@@ -907,13 +907,15 @@
                 btn_stop_qso: "중단 및 초기화",
                 expected_label: "당신의 차례를 기다리거나 전송하세요:",
                 tap_pad_main: "눌러서 전송",
-                tap_pad_sub: "터치 / 마우스 클릭으로 전송",
+                tap_pad_sub: "스페이스바 / 터치 / 마우스 클릭으로 전송",
                 output_label: "출력:",
                 btn_clear: "지우기",
                 stat_accuracy: "정확도:",
                 stat_wpm: "현재 WPM:",
                 stat_elements: "요소:",
-                hint_space: "스페이스바를 눌러 전송하세요"
+                hint_space: "스페이스바를 눌러 전송하세요",
+                kdn_placeholder: "선택 (예: L01)",
+                kdn_my_placeholder: "선택"
             },
             en: {
                 sidebar_settings: "Global Settings",
@@ -929,7 +931,7 @@
                 tab_qcodes: "Q-Codes & Abbreviations",
                 tab_qso: "Virtual QSO",
                 char_title: "Character Practice",
-                char_desc: "Master individual letters, numbers, and symbols. Select an item and use the spacebar to match the timing.",
+                char_desc: "Select a category to practice (letters, numbers, or special characters), then practice transmitting Morse code with the correct signal timing.",
                 cat_letters: "English Letters (A-Z)",
                 cat_numbers: "Numbers (0-9)",
                 cat_special: "Special Characters",
@@ -953,13 +955,15 @@
                 btn_stop_qso: "Stop & Reset",
                 expected_label: "Wait for your turn or transmit now:",
                 tap_pad_main: "TAP & HOLD TO TRANSMIT",
-                tap_pad_sub: "터치 / 마우스 클릭으로 전송",
+                tap_pad_sub: "Spacebar / Touch / Mouse Click to transmit",
                 output_label: "Output:",
                 btn_clear: "Clear",
                 stat_accuracy: "Accuracy:",
                 stat_wpm: "Current WPM:",
                 stat_elements: "Elements:",
-                hint_space: "Hold [Spacebar] to transmit"
+                hint_space: "Hold [Spacebar] to transmit",
+                kdn_placeholder: "Select (e.g. L01)",
+                kdn_my_placeholder: "Select"
             }
         };
 
@@ -970,6 +974,15 @@
                     el.textContent = TRANSLATIONS[lang][key];
                 }
             });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) {
+                    el.placeholder = TRANSLATIONS[lang][key];
+                }
+            });
+
+            populateQcodes();
         }
 
         const MORSE = {
@@ -996,21 +1009,21 @@
         };
 
         const QCODES = [
-            { code: "CQ", meaning: "아무 스테이션 호출" },
-            { code: "QTH", meaning: "위치는..." },
-            { code: "QSO", meaning: "직접 교신" },
-            { code: "QRV", meaning: "준비 완료" },
-            { code: "QSK", meaning: "들을 수 있음" },
-            { code: "QRL", meaning: "주파수 사용 중?" },
-            { code: "QRM", meaning: "간섭" },
-            { code: "QRN", meaning: "대기 잡음" },
-            { code: "73", meaning: "안부/감사" },
-            { code: "88", meaning: "사랑과 키스" },
-            { code: "DE", meaning: "...로부터" },
-            { code: "K", meaning: "응답 대기" },
-            { code: "R", meaning: "수신 완료" },
-            { code: "SK", meaning: "교신 종료" },
-            { code: "AR", meaning: "메시지 종료" }
+            { code: "CQ", meaning: { ko: "아무 스테이션 호출", en: "Call any station" } },
+            { code: "QTH", meaning: { ko: "위치는...", en: "Location is..." } },
+            { code: "QSO", meaning: { ko: "직접 교신", en: "Direct contact" } },
+            { code: "QRV", meaning: { ko: "준비 완료", en: "Ready" } },
+            { code: "QSK", meaning: { ko: "들을 수 있음", en: "Can hear" } },
+            { code: "QRL", meaning: { ko: "주파수 사용 중?", en: "Frequency busy?" } },
+            { code: "QRM", meaning: { ko: "간섭", en: "Interference" } },
+            { code: "QRN", meaning: { ko: "대기 잡음", en: "Atmospheric noise" } },
+            { code: "73", meaning: { ko: "안부/감사", en: "Best regards" } },
+            { code: "88", meaning: { ko: "사랑과 키스", en: "Love and kisses" } },
+            { code: "DE", meaning: { ko: "...로부터", en: "From" } },
+            { code: "K", meaning: { code: "K", ko: "응답 대기", en: "Back to you" } },
+            { code: "R", meaning: { ko: "수신 완료", en: "Received" } },
+            { code: "SK", meaning: { ko: "교신 종료", en: "End of contact" } },
+            { code: "AR", meaning: { ko: "메시지 종료", en: "End of message" } }
         ];
 
         // --- STATE ---
@@ -1154,10 +1167,12 @@
         function populateQcodes() {
             const grid = document.getElementById('qcodeGrid');
             grid.innerHTML = '';
+            const lang = document.getElementById('langSelect').value || 'ko';
             QCODES.forEach(q => {
                 const card = document.createElement('div');
                 card.className = `item-card ${STATE.selectedItem === q.code ? 'active' : ''}`;
-                card.innerHTML = `<span class="item-char">${q.code}</span><span class="item-morse" style="font-size: 8px;">${q.meaning}</span>`;
+                const meaningText = (q.meaning && q.meaning[lang]) ? q.meaning[lang] : '';
+                card.innerHTML = `<span class="item-char">${q.code}</span><span class="item-morse" style="font-size: 8px;">${meaningText}</span>`;
                 card.onclick = () => {
                     STATE.selectedItem = q.code;
                     document.querySelectorAll('.item-card').forEach(el => el.classList.remove('active'));
