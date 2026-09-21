@@ -681,6 +681,9 @@
                         <option value="en">English</option>
                     </select>
                 </div>
+                <button class="btn" id="resetGlobalBtn" data-i18n="btn_reset_global" style="width: 100%; margin-top: 16px; justify-content: center; font-size: 13px; background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                    🗑️ 전역 설정 초기화
+                </button>
             </div>
         </div>
 
@@ -694,9 +697,11 @@
 
         <div style="margin-top: auto; font-size: 10px; color: var(--text-muted); text-align: center;" data-i18n="sidebar_version">
             Expert Grade Morse Simulator v2.5
-            <br><br>
+        </div>
+        <div style="margin-auto: auto; font-size: 10px; color: var(--text-muted); text-align: center;" data-i18n="sidebar_develop">
             Designed & Developed by DS1UZO, 6K2MAM
         </div>
+        
     </div>
 
     <!-- Main Content Area -->
@@ -804,7 +809,10 @@
                         </div>
                     </div>
 
-                    <div style="margin-top: 32px; text-align: center;">
+                    <div style="margin-top: 32px; display: flex; justify-content: center; gap: 16px;">
+                        <button class="btn" id="resetQsoBtn" data-i18n="btn_reset_qso" style="padding: 16px 32px; background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                            <span>🗑️ 설정 초기화</span>
+                        </button>
                         <button class="btn btn-primary" style="padding: 16px 48px;" id="startQsoBtn" data-i18n="btn_start_qso">
                             <span>🚀 가상 QSO 시작</span>
                         </button>
@@ -885,6 +893,7 @@
                 sidebar_indicators: "상태 표시",
                 sidebar_key_status: "키 상태",
                 sidebar_version: "Expert Grade Morse Simulator v2.5",
+                sidebar_develop: "Designed & Developed by DS1UZO, 6K2MAM",
                 tab_characters: "문자 연습",
                 tab_qcodes: "Q-코드/약어",
                 tab_qso: "가상 QSO",
@@ -926,7 +935,9 @@
                 stat_elements: "요소:",
                 hint_space: "스페이스바를 눌러 전송하세요",
                 kdn_placeholder: "선택 (예: L01)",
-                kdn_my_placeholder: "선택"
+                kdn_my_placeholder: "선택",
+                btn_reset_global: "🗑️ 전역 설정 초기화",
+                btn_reset_qso: "🗑️ 설정 초기화"
             },
             en: {
                 sidebar_settings: "Global Settings",
@@ -938,6 +949,7 @@
                 sidebar_indicators: "Indicators",
                 sidebar_key_status: "Key Status",
                 sidebar_version: "Expert Grade Morse Simulator v2.5",
+                sidebar_develop: "Designed & Developed by DS1UZO, 6K2MAM",
                 tab_characters: "Characters",
                 tab_qcodes: "Q-Codes & Abbreviations",
                 tab_qso: "Virtual QSO",
@@ -979,7 +991,9 @@
                 stat_elements: "Elements:",
                 hint_space: "Hold [Spacebar] to transmit",
                 kdn_placeholder: "Select (e.g. L01)",
-                kdn_my_placeholder: "Select"
+                kdn_my_placeholder: "Select",
+                btn_reset_global: "🗑️ Reset Global Settings",
+                btn_reset_qso: "🗑️ Reset QSO Settings"
             }
         };
 
@@ -1000,6 +1014,57 @@
             });
 
             populateQcodes();
+        }
+
+        // --- COOKIE UTILITIES ---
+        function setCookie(name, value, days = 90) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "; expires=" + date.toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/; SameSite=Lax";
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        }
+
+        function saveGlobalSettings() {
+            const settings = {
+                wpm: parseInt(document.getElementById('wpmSlider').value),
+                pitch: parseInt(document.getElementById('pitchSlider').value),
+                volume: parseInt(document.getElementById('volSlider').value),
+                tolerance: parseInt(document.getElementById('tolSlider').value),
+                lang: document.getElementById('langSelect').value
+            };
+            setCookie('cw_trainer_global_settings', JSON.stringify(settings), 90);
+        }
+
+        function saveQsoSettings() {
+            const qsoSettings = {
+                oppCall: document.getElementById('oppCall').value,
+                oppName: document.getElementById('oppName').value,
+                oppQth: document.getElementById('oppQth').value,
+                oppKdn: document.getElementById('oppKdn').value,
+                oppRig: document.getElementById('oppRig').value,
+                myCall: document.getElementById('myCall').value,
+                myName: document.getElementById('myName').value,
+                myQth: document.getElementById('myQth').value,
+                myKdn: document.getElementById('myKdn').value,
+                myRig: document.getElementById('myRig').value,
+                showMorse: document.getElementById('showMorseToggle').checked
+            };
+            setCookie('cw_trainer_qso_settings', JSON.stringify(qsoSettings), 90);
         }
 
         const MORSE = {
@@ -1478,12 +1543,74 @@
         }
 
         // --- INITIALIZATION ---
+        function loadSavedSettings() {
+            const globalCookie = getCookie('cw_trainer_global_settings');
+            if (globalCookie) {
+                try {
+                    const settings = JSON.parse(globalCookie);
+                    if (settings.wpm !== undefined) {
+                        STATE.wpm = settings.wpm;
+                        document.getElementById('wpmSlider').value = settings.wpm;
+                        document.getElementById('wpmValueDisplay').innerText = `${settings.wpm} WPM`;
+                    }
+                    if (settings.pitch !== undefined) {
+                        STATE.pitch = settings.pitch;
+                        document.getElementById('pitchSlider').value = settings.pitch;
+                        document.getElementById('pitchValueDisplay').innerText = `${settings.pitch} Hz`;
+                    }
+                    if (settings.volume !== undefined) {
+                        STATE.volume = settings.volume / 100 * 0.5;
+                        document.getElementById('volSlider').value = settings.volume;
+                        document.getElementById('volValueDisplay').innerText = `${settings.volume}%`;
+                    }
+                    if (settings.tolerance !== undefined) {
+                        STATE.tolerance = settings.tolerance / 100;
+                        document.getElementById('tolSlider').value = settings.tolerance;
+                        document.getElementById('tolValueDisplay').innerText = `${settings.tolerance}%`;
+                    }
+                    if (settings.lang !== undefined) {
+                        STATE.lang = settings.lang;
+                        document.getElementById('langSelect').value = settings.lang;
+                    }
+                } catch (e) {
+                    console.error("Error parsing global settings cookie", e);
+                }
+            }
+
+            const qsoCookie = getCookie('cw_trainer_qso_settings');
+            if (qsoCookie) {
+                try {
+                    const qsoSettings = JSON.parse(qsoCookie);
+                    if (qsoSettings.oppCall !== undefined) document.getElementById('oppCall').value = qsoSettings.oppCall;
+                    if (qsoSettings.oppName !== undefined) document.getElementById('oppName').value = qsoSettings.oppName;
+                    if (qsoSettings.oppQth !== undefined) document.getElementById('oppQth').value = qsoSettings.oppQth;
+                    if (qsoSettings.oppKdn !== undefined) document.getElementById('oppKdn').value = qsoSettings.oppKdn;
+                    if (qsoSettings.oppRig !== undefined) document.getElementById('oppRig').value = qsoSettings.oppRig;
+                    if (qsoSettings.myCall !== undefined) document.getElementById('myCall').value = qsoSettings.myCall;
+                    if (qsoSettings.myName !== undefined) document.getElementById('myName').value = qsoSettings.myName;
+                    if (qsoSettings.myQth !== undefined) document.getElementById('myQth').value = qsoSettings.myQth;
+                    if (qsoSettings.myKdn !== undefined) document.getElementById('myKdn').value = qsoSettings.myKdn;
+                    if (qsoSettings.myRig !== undefined) document.getElementById('myRig').value = qsoSettings.myRig;
+                    if (qsoSettings.showMorse !== undefined) {
+                        document.getElementById('showMorseToggle').checked = qsoSettings.showMorse;
+                    }
+                } catch (e) {
+                    console.error("Error parsing QSO settings cookie", e);
+                }
+            }
+
+            // Apply loaded language or default 'ko'
+            const currentLang = STATE.lang || 'ko';
+            updateUI(currentLang);
+        }
+
         document.querySelectorAll('.tab-item').forEach(el => {
             el.onclick = () => updateTab(el.dataset.tab);
         });
 
         document.getElementById('langSelect').onchange = (e) => {
             updateUI(e.target.value);
+            saveGlobalSettings();
         };
 
         document.getElementById('charCategory').onchange = (e) => populateGrid(e.target.value);
@@ -1491,22 +1618,84 @@
         document.getElementById('wpmSlider').oninput = (e) => {
             STATE.wpm = parseInt(e.target.value);
             document.getElementById('wpmValueDisplay').innerText = `${STATE.wpm} WPM`;
+            saveGlobalSettings();
         };
         document.getElementById('pitchSlider').oninput = (e) => {
             STATE.pitch = parseInt(e.target.value);
             document.getElementById('pitchValueDisplay').innerText = `${STATE.pitch} Hz`;
+            saveGlobalSettings();
         };
         document.getElementById('volSlider').oninput = (e) => {
             STATE.volume = e.target.value / 100 * 0.5;
             document.getElementById('volValueDisplay').innerText = `${e.target.value}%`;
+            saveGlobalSettings();
         };
         document.getElementById('tolSlider').oninput = (e) => {
             STATE.tolerance = e.target.value / 100;
             document.getElementById('tolValueDisplay').innerText = `${e.target.value}%`;
+            saveGlobalSettings();
         };
 
         document.getElementById('randomizeCallBtn').onclick = () => {
             document.getElementById('oppCall').value = generateRandomCallsign();
+            saveQsoSettings();
+        };
+
+        // Bind auto-save to all QSO fields
+        const qsoInputs = [
+            'oppCall', 'oppName', 'oppQth', 'oppKdn', 'oppRig',
+            'myCall', 'myName', 'myQth', 'myKdn', 'myRig', 'showMorseToggle'
+        ];
+        qsoInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const eventType = el.type === 'checkbox' ? 'change' : 'input';
+                el.addEventListener(eventType, saveQsoSettings);
+            }
+        });
+
+        // Bind Settings Reset Buttons
+        document.getElementById('resetGlobalBtn').onclick = () => {
+            STATE.wpm = 20;
+            STATE.pitch = 700;
+            STATE.volume = 0.25;
+            STATE.tolerance = 0.15;
+            STATE.lang = 'ko';
+
+            document.getElementById('wpmSlider').value = 20;
+            document.getElementById('wpmValueDisplay').innerText = "20 WPM";
+
+            document.getElementById('pitchSlider').value = 700;
+            document.getElementById('pitchValueDisplay').innerText = "700 Hz";
+
+            document.getElementById('volSlider').value = 50;
+            document.getElementById('volValueDisplay').innerText = "50%";
+
+            document.getElementById('tolSlider').value = 15;
+            document.getElementById('tolValueDisplay').innerText = "15%";
+
+            document.getElementById('langSelect').value = 'ko';
+
+            saveGlobalSettings();
+            updateUI('ko');
+        };
+
+        document.getElementById('resetQsoBtn').onclick = () => {
+            document.getElementById('oppCall').value = "HL1ABC";
+            document.getElementById('oppName').value = "KIM";
+            document.getElementById('oppQth').value = "SEOUL";
+            document.getElementById('oppKdn').value = "";
+            document.getElementById('oppRig').value = "IC-7300";
+
+            document.getElementById('myCall').value = "6K1XYZ";
+            document.getElementById('myName').value = "CHOI";
+            document.getElementById('myQth').value = "BUSAN";
+            document.getElementById('myKdn').value = "";
+            document.getElementById('myRig').value = "ID-52 Plus";
+
+            document.getElementById('showMorseToggle').checked = true;
+
+            saveQsoSettings();
         };
 
         document.getElementById('startQsoBtn').onclick = () => {
@@ -1587,8 +1776,10 @@
             };
         }
 
+        // Load cookies initially
+        loadSavedSettings();
+        
         populateGrid('letters');
-        populateQcodes();
         
         function updateParsedOutput() {
             const parsedTextEl = document.getElementById('parsedText');
