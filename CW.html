@@ -834,9 +834,12 @@
                         <div class="expected-label" data-i18n="expected_label">당신의 차례를 기다리거나 전송하세요:</div>
                         <div class="expected-text" id="expectedText">-</div>
                         <div id="expectedMorse" style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--text-secondary);">-</div>
-                        <div style="margin-top: 12px; font-size: 12px;">
+                        <div style="margin-top: 12px; font-size: 12px; display: flex; justify-content: center; gap: 20px;">
                             <label>
                                 <input type="checkbox" id="showMorseToggle" checked> <span data-i18n="label_show_morse">모스 코드 보기</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" id="autoTestToggle"> <span data-i18n="label_auto_test">자동 테스트 모드</span>
                             </label>
                         </div>
                     </div>
@@ -922,6 +925,7 @@
                 btn_stop_qso: "중단 및 초기화",
                 expected_label: "당신의 차례를 기다리거나 전송하세요:",
                 label_show_morse: "모스 코드 보기",
+                label_auto_test: "자동 테스트 모드",
                 log_start_qso: "가상 QSO를 시작합니다.",
                 log_end_qso: "교신을 성공적으로 마쳤습니다. 73!",
                 status_receiving: "수신 중...",
@@ -1062,7 +1066,8 @@
                 myQth: document.getElementById('myQth').value,
                 myKdn: document.getElementById('myKdn').value,
                 myRig: document.getElementById('myRig').value,
-                showMorse: document.getElementById('showMorseToggle').checked
+                showMorse: document.getElementById('showMorseToggle').checked,
+                autoTest: document.getElementById('autoTestToggle').checked
             };
             setCookie('cw_trainer_qso_settings', JSON.stringify(qsoSettings), 90);
         }
@@ -1311,6 +1316,7 @@
             const expectedTextEl = document.getElementById('expectedText');
             const expectedMorseEl = document.getElementById('expectedMorse');
             const showMorse = document.getElementById('showMorseToggle').checked;
+            const autoTest = document.getElementById('autoTestToggle').checked;
 
             if (isSystem) {
                 expectedTextEl.innerText = t.status_receiving;
@@ -1344,6 +1350,15 @@
                     }
                 });
                 STATE.qsoBeatsRelStart = performance.now() - STATE.startTime;
+
+                // Auto Test Mode: Advance after delay
+                if (autoTest) {
+                    setTimeout(() => {
+                        if (STATE.qsoActive && STATE.qsoStep % 2 === 0) {
+                            advanceQso();
+                        }
+                    }, 3000);
+                }
             }
         }
 
