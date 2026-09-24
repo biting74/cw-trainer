@@ -1185,7 +1185,7 @@
             }, 15);
         }
 
-        function playText(text, onDone) {
+        function playText(text, onDone, type = 'sys') {
             initAudio();
             const dot = 1200 / STATE.wpm;
             let time = 0;
@@ -1194,11 +1194,31 @@
             text.toUpperCase().split("").forEach(char => {
                 const morse = MORSE[char] || "";
                 if (char === " ") {
+                    if (type === 'usr') {
+                        setTimeout(() => {
+                            if (STATE.accumulatedText === "" || STATE.accumulatedText === "-") {
+                                STATE.accumulatedText = " ";
+                            } else {
+                                STATE.accumulatedText += " ";
+                            }
+                            updateParsedOutput();
+                        }, time);
+                    }
                     time += dot * 4; // Word gap (already 3 from last char gap + 4)
                 } else {
+                    if (type === 'usr') {
+                        setTimeout(() => {
+                            if (STATE.accumulatedText === "" || STATE.accumulatedText === "-") {
+                                STATE.accumulatedText = char;
+                            } else {
+                                STATE.accumulatedText += char;
+                            }
+                            updateParsedOutput();
+                        }, time);
+                    }
                     morse.split("").forEach(el => {
                         const dur = el === '.' ? dot : dot * 3;
-                        beats.push({ type: 'sys', start: time, duration: dur });
+                        beats.push({ type: type, start: time, duration: dur, correct: true });
                         
                         setTimeout(() => {
                             startTone();
@@ -1351,13 +1371,16 @@
                 });
                 STATE.qsoBeatsRelStart = performance.now() - STATE.startTime;
 
-                // Auto Test Mode: Advance after delay
+                // Auto Test Mode: Actually play the user's text
                 if (autoTest) {
                     setTimeout(() => {
                         if (STATE.qsoActive && STATE.qsoStep % 2 === 0) {
-                            advanceQso();
+                            addLog(`TX(Auto): ${text}`, "user");
+                            playText(text, () => {
+                                setTimeout(advanceQso, 1500);
+                            }, 'usr');
                         }
-                    }, 3000);
+                    }, 1000);
                 }
             }
         }
