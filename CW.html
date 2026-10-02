@@ -275,6 +275,17 @@
             letter-spacing: 1px;
         }
 
+        #qcodeGrid .item-card {
+            padding: 10px 8px;
+        }
+
+        #qcodeGrid .item-morse {
+            font-size: 12px;
+            line-height: 1.35;
+            letter-spacing: 0;
+            text-align: center;
+        }
+
         /* Buttons Style */
         .btn {
             background-color: var(--bg-accent);
@@ -1517,7 +1528,7 @@
                 const card = document.createElement('div');
                 card.className = `item-card ${STATE.selectedItem === q.code ? 'active' : ''}`;
                 const meaningText = (q.meaning && q.meaning[lang]) ? q.meaning[lang] : '';
-                card.innerHTML = `<span class="item-char">${q.code}</span><span class="item-morse" style="font-size: 8px;">${meaningText}</span>`;
+                card.innerHTML = `<span class="item-char">${q.code}</span><span class="item-morse">${meaningText}</span>`;
                 card.onclick = () => {
                     STATE.selectedItem = q.code;
                     document.querySelectorAll('.item-card').forEach(el => el.classList.remove('active'));
