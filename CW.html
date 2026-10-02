@@ -496,12 +496,16 @@
 
         /* Responsive & Touch Pad Styles */
         .tap-pad-container {
-            padding: 0 10px 10px 10px;
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+            padding: 10px 32px 10px 32px;
             background-color: var(--bg-primary);
         }
         .tap-pad {
-            width: 100%;
-            height: 45px;
+            flex: 0.8;
+            min-width: 0;
+            height: 60px;
             background: linear-gradient(135deg, var(--bg-accent), #242c3a);
             border: 2px dashed var(--border-color);
             border-radius: 12px;
@@ -514,6 +518,50 @@
             outline: none;
             color: var(--text-secondary);
             -webkit-tap-highlight-color: transparent;
+        }
+        .keyer-pad {
+            flex: 1;
+            border-style: solid;
+            touch-action: none;
+        }
+        .keyer-pad kbd {
+            margin-top: 3px;
+            padding: 1px 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-muted);
+            font: 11px 'JetBrains Mono', monospace;
+        }
+        .keyer-pad.active,
+        .keyer-pad.pressed {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0, 210, 255, 0.1));
+            border-color: var(--success);
+            color: var(--success);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+        }
+        .reverse-toggle {
+            flex: 0 0 82px;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font: inherit;
+            font-size: 11px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .reverse-toggle[aria-pressed="true"] {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+        .reverse-toggle-state {
+            font: 700 10px 'JetBrains Mono', monospace;
         }
         .tap-pad:active, .tap-pad.active {
             background: linear-gradient(135deg, rgba(0, 210, 255, 0.15), rgba(112, 0, 255, 0.1));
@@ -610,9 +658,20 @@
             }
             .tap-pad-container {
                 padding: 0 16px 12px 16px;
+                gap: 8px;
             }
             .tap-pad {
-                height: 90px;
+                height: 60px;
+            }
+            .reverse-toggle {
+                height: 60px;
+                flex-basis: 72px;
+            }
+            .tap-pad-text {
+                font-size: 13px;
+            }
+            .tap-pad-subtext {
+                display: none;
             }
             #spaceHint {
                 display: none;
@@ -855,6 +914,18 @@
                 <span class="tap-pad-text" data-i18n="tap_pad_main">눌러서 전송</span>
                 <span class="tap-pad-subtext" data-i18n="tap_pad_sub">스페이스바 / 터치 / 마우스 클릭으로 전송</span>
             </button>
+            <button class="tap-pad keyer-pad" id="leftKeyerButton" type="button" aria-label="왼쪽 패들">
+                <span class="tap-pad-text" id="leftKeyerLabel" data-i18n="keyer_dot">점 (.)</span>
+                <kbd>[</kbd>
+            </button>
+            <button class="tap-pad keyer-pad" id="rightKeyerButton" type="button" aria-label="오른쪽 패들">
+                <span class="tap-pad-text" id="rightKeyerLabel" data-i18n="keyer_dash">선 (-)</span>
+                <kbd>]</kbd>
+            </button>
+            <button class="reverse-toggle" id="paddleReverseButton" type="button" aria-pressed="false">
+                <span data-i18n="label_paddle_reverse">좌우 반전</span>
+                <span class="reverse-toggle-state" id="paddleReverseState">해제</span>
+            </button>
         </div>
 
         <!-- Parsed Morse Output -->
@@ -926,12 +997,18 @@
                 expected_label: "당신의 차례를 기다리거나 전송하세요:",
                 label_show_morse: "모스 코드 보기",
                 label_auto_test: "자동 테스트 모드",
+                label_paddle_reverse: "패들 좌우 반전",
                 log_start_qso: "가상 QSO를 시작합니다.",
                 log_end_qso: "교신을 성공적으로 마쳤습니다. 73!",
                 status_receiving: "수신 중...",
                 status_waiting: "송신을 기다리는 중...",
                 tap_pad_main: "눌러서 전송",
                 tap_pad_sub: "스페이스바 / 터치 / 마우스 클릭으로 전송",
+                keyer_dot: "점 (.)",
+                keyer_dash: "선 (-)",
+                label_paddle_reverse: "좌우 반전",
+                reverse_off: "해제",
+                reverse_on: "적용",
                 output_label: "출력:",
                 btn_clear: "지우기",
                 stat_accuracy: "정확도:",
@@ -988,6 +1065,11 @@
                 status_waiting: "Waiting for transmission...",
                 tap_pad_main: "TAP & HOLD TO TRANSMIT",
                 tap_pad_sub: "Spacebar / Touch / Mouse Click to transmit",
+                keyer_dot: "Dot (.)",
+                keyer_dash: "Dash (-)",
+                label_paddle_reverse: "Reverse",
+                reverse_off: "OFF",
+                reverse_on: "ON",
                 output_label: "Output:",
                 btn_clear: "Clear",
                 stat_accuracy: "Accuracy:",
@@ -1018,6 +1100,7 @@
             });
 
             populateQcodes();
+            updatePaddleControls();
         }
 
         // --- COOKIE UTILITIES ---
@@ -1049,7 +1132,8 @@
                 pitch: parseInt(document.getElementById('pitchSlider').value),
                 volume: parseInt(document.getElementById('volSlider').value),
                 tolerance: parseInt(document.getElementById('tolSlider').value),
-                lang: document.getElementById('langSelect').value
+                lang: document.getElementById('langSelect').value,
+                paddleReverse: STATE.paddleReverse
             };
             setCookie('cw_trainer_global_settings', JSON.stringify(settings), 90);
         }
@@ -1122,6 +1206,7 @@
             currentTab: 'characters',
             selectedItem: 'A',
             isKeyDown: false,
+            paddleReverse: false,
             audioCtx: null,
             osc: null,
             gain: null,
@@ -1139,6 +1224,10 @@
             qsoStep: 0,
             qsoParams: null,
             qsoBeats: [],
+            qsoAutoTimer: null,
+            qsoAutoTimers: [],
+            qsoAutoGeneration: 0,
+            qsoAutoPlaying: false,
             
             // Statistics
             totalUserElements: 0,
@@ -1187,6 +1276,11 @@
 
         function playText(text, onDone, type = 'sys') {
             initAudio();
+            const schedule = (callback, delay) => {
+                const timer = setTimeout(callback, delay);
+                if (type === 'usr') STATE.qsoAutoTimers.push(timer);
+                return timer;
+            };
             const dot = 1200 / STATE.wpm;
             let time = 0;
             const beats = [];
@@ -1195,7 +1289,7 @@
                 const morse = MORSE[char] || "";
                 if (char === " ") {
                     if (type === 'usr') {
-                        setTimeout(() => {
+                        schedule(() => {
                             if (STATE.accumulatedText === "" || STATE.accumulatedText === "-") {
                                 STATE.accumulatedText = " ";
                             } else {
@@ -1207,7 +1301,7 @@
                     time += dot * 4; // Word gap (already 3 from last char gap + 4)
                 } else {
                     if (type === 'usr') {
-                        setTimeout(() => {
+                        schedule(() => {
                             if (STATE.accumulatedText === "" || STATE.accumulatedText === "-") {
                                 STATE.accumulatedText = char;
                             } else {
@@ -1220,9 +1314,9 @@
                         const dur = el === '.' ? dot : dot * 3;
                         beats.push({ type: type, start: time, duration: dur, correct: true });
                         
-                        setTimeout(() => {
+                        schedule(() => {
                             startTone();
-                            setTimeout(stopTone, dur);
+                            schedule(stopTone, dur);
                         }, time);
                         
                         time += dur + dot;
@@ -1240,7 +1334,7 @@
                 });
             });
 
-            if (onDone) setTimeout(onDone, time);
+            if (onDone) schedule(onDone, time);
             return beats;
         }
 
@@ -1336,7 +1430,6 @@
             const expectedTextEl = document.getElementById('expectedText');
             const expectedMorseEl = document.getElementById('expectedMorse');
             const showMorse = document.getElementById('showMorseToggle').checked;
-            const autoTest = document.getElementById('autoTestToggle').checked;
 
             if (isSystem) {
                 expectedTextEl.innerText = t.status_receiving;
@@ -1371,19 +1464,52 @@
                 });
                 STATE.qsoBeatsRelStart = performance.now() - STATE.startTime;
 
-                // Auto Test Mode: Actually play the user's text
-                if (autoTest) {
-                    setTimeout(() => {
-                        if (STATE.qsoActive && STATE.qsoStep % 2 === 0) {
-                            addLog(`TX(Auto): ${text}`, "user");
-                            playText(text, () => {
-                                setTimeout(advanceQso, 1500);
-                            }, 'usr');
-                        }
-                    }, 1000);
-                }
+                scheduleAutoTest(1000);
             }
         }
+
+        function cancelQsoAutoTest() {
+            STATE.qsoAutoGeneration++;
+            if (STATE.qsoAutoTimer) clearTimeout(STATE.qsoAutoTimer);
+            STATE.qsoAutoTimer = null;
+            STATE.qsoAutoTimers.forEach(clearTimeout);
+            STATE.qsoAutoTimers = [];
+            if (STATE.qsoAutoPlaying) stopTone();
+            STATE.qsoAutoPlaying = false;
+        }
+
+        function scheduleAutoTest(delay = 0) {
+            if (!STATE.qsoActive || STATE.qsoStep % 2 !== 0 || !document.getElementById('autoTestToggle').checked) return;
+            if (STATE.qsoAutoTimer) clearTimeout(STATE.qsoAutoTimer);
+            const step = STATE.qsoStep;
+            const generation = STATE.qsoAutoGeneration;
+            const text = getQsoStepText();
+            STATE.qsoAutoTimer = setTimeout(() => {
+                STATE.qsoAutoTimer = null;
+                if (generation !== STATE.qsoAutoGeneration || !STATE.qsoActive || STATE.qsoStep !== step || !document.getElementById('autoTestToggle').checked) return;
+                if (STATE.isKeyDown || paddleState.left || paddleState.right) {
+                    scheduleAutoTest(100);
+                    return;
+                }
+
+                addLog(`TX(Auto): ${text}`, "user");
+                STATE.qsoAutoPlaying = true;
+                playText(text, () => {
+                    if (generation !== STATE.qsoAutoGeneration || !STATE.qsoActive || STATE.qsoStep !== step) return;
+                    STATE.qsoAutoPlaying = false;
+                    STATE.qsoAutoTimer = setTimeout(advanceQso, 1500);
+                }, 'usr');
+            }, delay);
+        }
+
+        document.getElementById('autoTestToggle').addEventListener('change', e => {
+            saveQsoSettings();
+            if (e.target.checked) {
+                scheduleAutoTest();
+            } else {
+                cancelQsoAutoTest();
+            }
+        });
 
         // Add listener for toggle
         document.getElementById('showMorseToggle').onchange = (e) => {
@@ -1402,6 +1528,7 @@
         }
 
         function stopQso() {
+            cancelQsoAutoTest();
             STATE.qsoActive = false;
             STATE.qsoStep = 0;
             document.getElementById('qsoSetupSection').style.display = 'block';
@@ -1453,10 +1580,19 @@
         // --- INPUT HANDLING ---
         let keyDownTime = 0;
         let parsingTimeout = null;
+        let activeSignal = null;
+        let activeInputElement = null;
+        const paddleState = { left: false, right: false };
+        let keyerBusy = false;
+        let keyerTimer = null;
+        let lastKeyerSignal = null;
 
-        function handleTransmitStart() {
+        function handleTransmitStart(signal = null, inputElement = document.getElementById('tapPad')) {
+            if (keyerBusy && signal === null) return;
             if (STATE.isKeyDown) return;
             STATE.isKeyDown = true;
+            activeSignal = signal;
+            activeInputElement = inputElement;
             keyDownTime = performance.now();
             
             // Parsing Logic: Character gap detection
@@ -1470,19 +1606,18 @@
 
             document.getElementById('keyIndicator').classList.add('active');
             
-            const tapPad = document.getElementById('tapPad');
-            if (tapPad) tapPad.classList.add('active');
+            if (activeInputElement) activeInputElement.classList.add('active');
             
             startTone();
         }
 
-        function handleTransmitEnd() {
+        function handleTransmitEnd(signal = activeSignal) {
             if (!STATE.isKeyDown) return;
             STATE.isKeyDown = false;
+            activeSignal = null;
             document.getElementById('keyIndicator').classList.remove('active');
-            
-            const tapPad = document.getElementById('tapPad');
-            if (tapPad) tapPad.classList.remove('active');
+            if (activeInputElement) activeInputElement.classList.remove('active');
+            activeInputElement = null;
             
             stopTone();
             
@@ -1494,7 +1629,8 @@
             let correct = false;
 
             // Parsing: Append symbol to current morse code
-            STATE.currentMorse += (duration < dot * 2) ? '.' : '-';
+            const transmittedSignal = signal || (duration < dot * 2 ? '.' : '-');
+            STATE.currentMorse += transmittedSignal;
             
             // Schedule character resolution
             parsingTimeout = setTimeout(() => {
@@ -1531,7 +1667,7 @@
                 }
             } else {
                 // Accuracy against standard for single items
-                const expected = duration < dot * 2 ? dot : dot * 3;
+                const expected = transmittedSignal === '.' ? dot : dot * 3;
                 if (Math.abs(duration - expected) < expected * STATE.tolerance) correct = true;
             }
 
@@ -1545,22 +1681,86 @@
             // Update Stats
             STATE.totalUserElements++;
             if (correct) STATE.correctUserElements++;
-            if (duration < dot * 2) STATE.userDots.push(duration);
+            if (transmittedSignal === '.') STATE.userDots.push(duration);
             if (STATE.userDots.length > 5) STATE.userDots.shift();
 
             updateStats();
+            if (!keyerBusy && (paddleState.left || paddleState.right)) transmitNextPaddleElement();
+        }
+
+        function updatePaddleControls() {
+            const lang = STATE.lang || 'ko';
+            const labels = TRANSLATIONS[lang] || TRANSLATIONS.ko;
+            const leftSignal = STATE.paddleReverse ? '-' : '.';
+            const rightSignal = STATE.paddleReverse ? '.' : '-';
+            document.getElementById('leftKeyerLabel').textContent = leftSignal === '.' ? labels.keyer_dot : labels.keyer_dash;
+            document.getElementById('rightKeyerLabel').textContent = rightSignal === '.' ? labels.keyer_dot : labels.keyer_dash;
+            const reverseButton = document.getElementById('paddleReverseButton');
+            reverseButton.setAttribute('aria-pressed', String(STATE.paddleReverse));
+            document.getElementById('paddleReverseState').textContent = STATE.paddleReverse ? labels.reverse_on : labels.reverse_off;
+        }
+
+        function getPaddleSignal(side) {
+            const isDot = side === 'left' ? !STATE.paddleReverse : STATE.paddleReverse;
+            return isDot ? '.' : '-';
+        }
+
+        function transmitNextPaddleElement() {
+            if (keyerBusy || STATE.isKeyDown) return;
+            const leftPressed = paddleState.left;
+            const rightPressed = paddleState.right;
+            if (!leftPressed && !rightPressed) return;
+
+            let signal;
+            if (leftPressed && rightPressed) {
+                signal = lastKeyerSignal === '.' ? '-' : '.';
+            } else {
+                signal = getPaddleSignal(leftPressed ? 'left' : 'right');
+            }
+
+            const button = document.getElementById(signal === getPaddleSignal('left') ? 'leftKeyerButton' : 'rightKeyerButton');
+            const elementDuration = (1200 / STATE.wpm) * (signal === '.' ? 1 : 3);
+            keyerBusy = true;
+            lastKeyerSignal = signal;
+            handleTransmitStart(signal, button);
+            keyerTimer = setTimeout(() => {
+                handleTransmitEnd(signal);
+                keyerTimer = setTimeout(() => {
+                    keyerBusy = false;
+                    transmitNextPaddleElement();
+                }, 1200 / STATE.wpm);
+            }, elementDuration);
+        }
+
+        function setPaddle(side, pressed) {
+            if (paddleState[side] === pressed) return;
+            paddleState[side] = pressed;
+            const buttonId = side === 'left' ? 'leftKeyerButton' : 'rightKeyerButton';
+            const button = document.getElementById(buttonId);
+            button.classList.toggle('pressed', pressed);
+            if (pressed) transmitNextPaddleElement();
         }
 
         window.addEventListener('keydown', e => {
             if (e.code === 'Space') {
                 e.preventDefault();
                 handleTransmitStart();
+            } else if (e.code === 'BracketLeft') {
+                e.preventDefault();
+                setPaddle('left', true);
+            } else if (e.code === 'BracketRight') {
+                e.preventDefault();
+                setPaddle('right', true);
             }
         });
 
         window.addEventListener('keyup', e => {
             if (e.code === 'Space') {
                 handleTransmitEnd();
+            } else if (e.code === 'BracketLeft') {
+                setPaddle('left', false);
+            } else if (e.code === 'BracketRight') {
+                setPaddle('right', false);
             }
         });
 
@@ -1610,6 +1810,7 @@
                         STATE.lang = settings.lang;
                         document.getElementById('langSelect').value = settings.lang;
                     }
+                    if (settings.paddleReverse !== undefined) STATE.paddleReverse = settings.paddleReverse;
                 } catch (e) {
                     console.error("Error parsing global settings cookie", e);
                 }
@@ -1631,6 +1832,9 @@
                     if (qsoSettings.myRig !== undefined) document.getElementById('myRig').value = qsoSettings.myRig;
                     if (qsoSettings.showMorse !== undefined) {
                         document.getElementById('showMorseToggle').checked = qsoSettings.showMorse;
+                    }
+                    if (qsoSettings.autoTest !== undefined) {
+                        document.getElementById('autoTestToggle').checked = qsoSettings.autoTest;
                     }
                 } catch (e) {
                     console.error("Error parsing QSO settings cookie", e);
@@ -1682,7 +1886,7 @@
         // Bind auto-save to all QSO fields
         const qsoInputs = [
             'oppCall', 'oppName', 'oppQth', 'oppKdn', 'oppRig',
-            'myCall', 'myName', 'myQth', 'myKdn', 'myRig', 'showMorseToggle'
+            'myCall', 'myName', 'myQth', 'myKdn', 'myRig', 'showMorseToggle', 'autoTestToggle'
         ];
         qsoInputs.forEach(id => {
             const el = document.getElementById(id);
@@ -1699,6 +1903,7 @@
             STATE.volume = 0.25;
             STATE.tolerance = 0.15;
             STATE.lang = 'ko';
+            STATE.paddleReverse = false;
 
             document.getElementById('wpmSlider').value = 20;
             document.getElementById('wpmValueDisplay').innerText = "20 WPM";
@@ -1732,6 +1937,7 @@
             document.getElementById('myRig').value = "ID-52 Plus";
 
             document.getElementById('showMorseToggle').checked = true;
+            document.getElementById('autoTestToggle').checked = false;
 
             saveQsoSettings();
         };
@@ -1788,6 +1994,24 @@
                 handleTransmitEnd();
             });
         }
+
+        document.getElementById('paddleReverseButton').addEventListener('click', () => {
+            STATE.paddleReverse = !STATE.paddleReverse;
+            updatePaddleControls();
+            saveGlobalSettings();
+        });
+
+        [['left', 'leftKeyerButton'], ['right', 'rightKeyerButton']].forEach(([side, buttonId]) => {
+            const button = document.getElementById(buttonId);
+            button.addEventListener('pointerdown', e => {
+                e.preventDefault();
+                if (button.setPointerCapture) button.setPointerCapture(e.pointerId);
+                setPaddle(side, true);
+            });
+            ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(eventName => {
+                button.addEventListener(eventName, () => setPaddle(side, false));
+            });
+        });
 
         // Mobile Sidebar Controls
         const sidebar = document.querySelector('.sidebar');
