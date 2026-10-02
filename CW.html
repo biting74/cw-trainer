@@ -76,6 +76,7 @@
             font-weight: 700;
             letter-spacing: -0.5px;
             background: linear-gradient(to right, #fff, #94a3b8);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -118,6 +119,7 @@
         }
 
         input[type="range"] {
+            appearance: none;
             -webkit-appearance: none;
             width: 100%;
             height: 4px;
@@ -295,15 +297,15 @@
         }
 
         .btn-primary {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-            color: #000;
+            background-color: rgba(0, 210, 255, 0.12);
+            border-color: rgba(0, 210, 255, 0.55);
+            color: var(--accent-color);
         }
 
         .btn-primary:hover {
-            background-color: #33dbff;
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
-            transform: scale(1.02);
+            background-color: rgba(0, 210, 255, 0.22);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 14px rgba(0, 210, 255, 0.18);
         }
 
         /* Setup Form (Tab 3) */
@@ -311,6 +313,21 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
+        }
+
+        .qso-action-row {
+            margin-top: 32px;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        #startQsoBtn {
+            padding: 16px 48px;
+        }
+
+        #resetQsoBtn {
+            padding: 16px 32px;
         }
 
         .form-group {
@@ -499,8 +516,8 @@
             display: flex;
             gap: 8px;
             align-items: stretch;
-            padding: 10px 32px 10px 32px;
-            background-color: var(--bg-primary);
+            padding: 22px 32px 10px 32px;
+            background-color: var(--bg-secondary);
         }
         .tap-pad {
             flex: 0.8;
@@ -634,6 +651,16 @@
                 grid-template-columns: 1fr;
                 gap: 16px;
             }
+            .qso-action-row {
+                margin-top: 24px;
+                gap: 8px;
+            }
+            .qso-action-row #startQsoBtn,
+            .qso-action-row #resetQsoBtn {
+                padding: 12px 8px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
             .content-area {
                 padding: 16px;
             }
@@ -677,10 +704,81 @@
                 display: none;
             }
             :root {
-                --bottom-height: 140px;
+                --bottom-height: clamp(122px, 17.7vw, 136px);
+            }
+            .bottom-timeline {
+                padding: 6px 12px;
+            }
+            .timeline-header {
+                margin-bottom: 4px;
+            }
+            .timeline-title {
+                display: none;
             }
             .canvas-container {
-                height: 70px;
+                height: 90px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .qso-action-row {
+                gap: 6px;
+            }
+            .qso-action-row #startQsoBtn,
+            .qso-action-row #resetQsoBtn {
+                flex: 1 1 0;
+                min-width: 0;
+                padding: 12px 10px;
+                font-size: 12px;
+                justify-content: center;
+            }
+            .tap-pad:not(.keyer-pad) {
+                flex: 0.7;
+                min-width: 56px;
+            }
+            .keyer-pad {
+                flex: 1.2;
+                min-width: 62px;
+            }
+            .reverse-toggle {
+                flex-basis: 46px;
+                font-size: 10px;
+            }
+            .timeline-title {
+                display: none;
+            }
+            .timeline-header {
+                margin-bottom: 4px;
+            }
+            .timeline-stats {
+                width: 100%;
+                justify-content: space-between;
+                gap: 6px;
+                font-size: 10px;
+                flex-wrap: nowrap;
+            }
+            .stat-item {
+                gap: 4px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .qso-action-row #startQsoBtn,
+            .qso-action-row #resetQsoBtn {
+                padding: 10px 8px;
+                font-size: 11px;
+            }
+            .tap-pad-container {
+                gap: 6px;
+            }
+            .tap-pad:not(.keyer-pad) {
+                min-width: 50px;
+            }
+            .keyer-pad {
+                min-width: 58px;
+            }
+            .reverse-toggle {
+                flex-basis: 42px;
             }
         }
     </style>
@@ -740,6 +838,14 @@
                         <option value="en">English</option>
                     </select>
                 </div>
+                <div class="slider-wrapper">
+                    <div class="slider-label">
+                        <span data-i18n="serial_keyer_title">시리얼 키어</span>
+                    </div>
+                    <button class="btn" id="serialKeyerButton" type="button" data-i18n="serial_connect" style="width: 100%; justify-content: center;">키어 연결</button>
+                    <div id="serialKeyerStatus" role="status" aria-live="polite" style="font-size: 11px; line-height: 1.5; color: var(--text-secondary);"></div>
+                    <div data-i18n="serial_keyer_help" style="font-size: 10px; line-height: 1.5; color: var(--text-muted);">CTS=왼쪽, DSR=오른쪽 패들 입력</div>
+                </div>
                 <button class="btn" id="resetGlobalBtn" data-i18n="btn_reset_global" style="width: 100%; margin-top: 16px; justify-content: center; font-size: 13px; background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444;">
                     🗑️ 전역 설정 초기화
                 </button>
@@ -757,7 +863,7 @@
         <div style="margin-top: auto; font-size: 10px; color: var(--text-muted); text-align: center;" data-i18n="sidebar_version">
             Expert Grade Morse Simulator v2.5
         </div>
-        <div style="margin-auto: auto; font-size: 10px; color: var(--text-muted); text-align: center;" data-i18n="sidebar_develop">
+        <div style="font-size: 10px; color: var(--text-muted); text-align: center;" data-i18n="sidebar_develop">
             Designed & Developed by DS1UZO, 6K2MAM
         </div>
         
@@ -837,7 +943,10 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label" data-i18n="label_opp_kdn">상대 KDN (지역 코드)</label>
-                                <input type="text" id="oppKdn" class="form-input" data-i18n-placeholder="kdn_placeholder" placeholder="선택 (예: L01)">
+                                <div class="form-input-row">
+                                    <input type="text" id="oppKdn" class="form-input" data-i18n-placeholder="kdn_placeholder" placeholder="선택 (예: L01)">
+                                    <button class="btn" id="randomizeOppKdnBtn" type="button" data-i18n="btn_random_kdn">🎲 KDN</button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label" data-i18n="label_opp_rig">상대 무전기</label>
@@ -859,7 +968,10 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label" data-i18n="label_my_kdn">내 KDN</label>
-                                <input type="text" id="myKdn" class="form-input" data-i18n-placeholder="kdn_my_placeholder" placeholder="선택">
+                                <div class="form-input-row">
+                                    <input type="text" id="myKdn" class="form-input" data-i18n-placeholder="kdn_my_placeholder" placeholder="선택">
+                                    <button class="btn" id="randomizeMyKdnBtn" type="button" data-i18n="btn_random_kdn">🎲 KDN</button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label" data-i18n="label_my_rig">내 무전기</label>
@@ -868,12 +980,12 @@
                         </div>
                     </div>
 
-                    <div style="margin-top: 32px; display: flex; justify-content: center; gap: 16px;">
-                        <button class="btn" id="resetQsoBtn" data-i18n="btn_reset_qso" style="padding: 16px 32px; background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444;">
-                            <span>🗑️ 설정 초기화</span>
-                        </button>
-                        <button class="btn btn-primary" style="padding: 16px 48px;" id="startQsoBtn" data-i18n="btn_start_qso">
+                    <div class="qso-action-row">
+                        <button class="btn btn-primary" id="startQsoBtn" data-i18n="btn_start_qso">
                             <span>🚀 가상 QSO 시작</span>
+                        </button>
+                        <button class="btn" id="resetQsoBtn" data-i18n="btn_reset_qso" style="background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                            <span>🗑️ 설정 초기화</span>
                         </button>
                     </div>
                 </div>
@@ -908,26 +1020,6 @@
 
         </div>
 
-        <!-- Tap Pad for Touch Devices -->
-        <div class="tap-pad-container" id="tapPadContainer">
-            <button class="tap-pad" id="tapPad">
-                <span class="tap-pad-text" data-i18n="tap_pad_main">눌러서 전송</span>
-                <span class="tap-pad-subtext" data-i18n="tap_pad_sub">스페이스바 / 터치 / 마우스 클릭으로 전송</span>
-            </button>
-            <button class="tap-pad keyer-pad" id="leftKeyerButton" type="button" aria-label="왼쪽 패들">
-                <span class="tap-pad-text" id="leftKeyerLabel" data-i18n="keyer_dot">점 (.)</span>
-                <kbd>[</kbd>
-            </button>
-            <button class="tap-pad keyer-pad" id="rightKeyerButton" type="button" aria-label="오른쪽 패들">
-                <span class="tap-pad-text" id="rightKeyerLabel" data-i18n="keyer_dash">선 (-)</span>
-                <kbd>]</kbd>
-            </button>
-            <button class="reverse-toggle" id="paddleReverseButton" type="button" aria-pressed="false">
-                <span data-i18n="label_paddle_reverse">좌우 반전</span>
-                <span class="reverse-toggle-state" id="paddleReverseState">해제</span>
-            </button>
-        </div>
-
         <!-- Parsed Morse Output -->
         <div id="parsedOutput" style="padding: 10px 32px; font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--accent-color); background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 16px;">
             <div style="flex-shrink: 0; font-weight: 700; color: var(--text-primary);" data-i18n="output_label">출력:</div>
@@ -951,6 +1043,26 @@
                 <canvas id="timelineCanvas"></canvas>
                 <div class="timeline-overlay"></div>
             </div>
+        </div>
+
+        <!-- Paddle controls stay at the bottom of the interface -->
+        <div class="tap-pad-container" id="tapPadContainer">
+            <button class="tap-pad" id="tapPad">
+                <span class="tap-pad-text" data-i18n="tap_pad_main">눌러서 전송</span>
+                <span class="tap-pad-subtext" data-i18n="tap_pad_sub">스페이스바 / 터치 / 마우스 클릭으로 전송</span>
+            </button>
+            <button class="tap-pad keyer-pad" id="leftKeyerButton" type="button" aria-label="왼쪽 패들">
+                <span class="tap-pad-text" id="leftKeyerLabel" data-i18n="keyer_dot">점 (.)</span>
+                <kbd>[</kbd>
+            </button>
+            <button class="tap-pad keyer-pad" id="rightKeyerButton" type="button" aria-label="오른쪽 패들">
+                <span class="tap-pad-text" id="rightKeyerLabel" data-i18n="keyer_dash">선 (-)</span>
+                <kbd>]</kbd>
+            </button>
+            <button class="reverse-toggle" id="paddleReverseButton" type="button" aria-pressed="false">
+                <span data-i18n="label_paddle_reverse">좌우 반전</span>
+                <span class="reverse-toggle-state" id="paddleReverseState">해제</span>
+            </button>
         </div>
     </div>
 
@@ -994,6 +1106,7 @@
                 btn_start_qso: "🚀 가상 QSO 시작",
                 qso_active_status: "교신 진행 중",
                 btn_stop_qso: "중단 및 초기화",
+                btn_reset_qso_complete: "초기화",
                 expected_label: "당신의 차례를 기다리거나 전송하세요:",
                 label_show_morse: "모스 코드 보기",
                 label_auto_test: "자동 테스트 모드",
@@ -1009,6 +1122,17 @@
                 label_paddle_reverse: "좌우 반전",
                 reverse_off: "해제",
                 reverse_on: "적용",
+                serial_keyer_title: "시리얼 키어",
+                serial_connect: "키어 연결",
+                serial_disconnect: "연결 해제",
+                serial_unsupported: "이 브라우저는 Web Serial을 지원하지 않아 키어를 연결할 수 없습니다.",
+                serial_secure_context: "시리얼 키어는 HTTPS/localhost 등 보안 연결에서만 사용할 수 있습니다.",
+                serial_disconnected: "키어가 연결되지 않았습니다.",
+                serial_connecting: "키어 연결 중...",
+                serial_connected: "연결됨: CTS 왼쪽 / DSR 오른쪽 패들",
+                serial_cancelled: "키어 선택이 취소되었습니다.",
+                serial_error: "키어 연결에 실패했습니다. 포트와 연결 상태를 확인하세요.",
+                serial_keyer_help: "CTS=왼쪽, DSR=오른쪽 패들 입력",
                 output_label: "출력:",
                 btn_clear: "지우기",
                 stat_accuracy: "정확도:",
@@ -1017,6 +1141,7 @@
                 hint_space: "스페이스바를 눌러 전송하세요",
                 kdn_placeholder: "선택 (예: L01)",
                 kdn_my_placeholder: "선택",
+                btn_random_kdn: "🎲 KDN",
                 btn_reset_global: "🗑️ 전역 설정 초기화",
                 btn_reset_qso: "🗑️ 설정 초기화"
             },
@@ -1057,6 +1182,7 @@
                 btn_start_qso: "🚀 Start Virtual QSO",
                 qso_active_status: "Scenario Active",
                 btn_stop_qso: "Stop & Reset",
+                btn_reset_qso_complete: "Reset",
                 expected_label: "Wait for your turn or transmit now:",
                 label_show_morse: "Show Morse Code",
                 log_start_qso: "Starting Virtual QSO...",
@@ -1070,6 +1196,17 @@
                 label_paddle_reverse: "Reverse",
                 reverse_off: "OFF",
                 reverse_on: "ON",
+                serial_keyer_title: "Serial Keyer",
+                serial_connect: "Connect keyer",
+                serial_disconnect: "Disconnect",
+                serial_unsupported: "This browser does not support Web Serial, so a keyer cannot be connected.",
+                serial_secure_context: "Serial keyers require a secure context, such as HTTPS or localhost.",
+                serial_disconnected: "No keyer is connected.",
+                serial_connecting: "Connecting keyer...",
+                serial_connected: "Connected: CTS left / DSR right paddle",
+                serial_cancelled: "Keyer selection was cancelled.",
+                serial_error: "Could not connect to the keyer. Check the port and connection.",
+                serial_keyer_help: "CTS=left, DSR=right paddle input",
                 output_label: "Output:",
                 btn_clear: "Clear",
                 stat_accuracy: "Accuracy:",
@@ -1078,6 +1215,7 @@
                 hint_space: "Hold [Spacebar] to transmit",
                 kdn_placeholder: "Select (e.g. L01)",
                 kdn_my_placeholder: "Select",
+                btn_random_kdn: "🎲 KDN",
                 btn_reset_global: "🗑️ Reset Global Settings",
                 btn_reset_qso: "🗑️ Reset QSO Settings"
             }
@@ -1101,6 +1239,7 @@
 
             populateQcodes();
             updatePaddleControls();
+            updateSerialKeyerUI();
         }
 
         // --- COOKIE UTILITIES ---
@@ -1196,6 +1335,11 @@
             { code: "SK", meaning: { ko: "교신 종료", en: "End of contact" } },
             { code: "AR", meaning: { ko: "메시지 종료", en: "End of message" } }
         ];
+
+        const KDN_REGIONS = `강원 춘천시:D01;강원 원주시:D02;강원 강릉시:D03;강원 동해시:D05;강원 태백시:D06;강원 속초시:D04;강원 삼척시:D07;강원 홍천군:D12;강원 횡성군:D13;강원 영월군:D17;강원 평창군:D15;강원 정선군:D16;강원 철원군:D25;강원 화천군:D24;강원 양구군:D23;강원 인제군:D21;강원 고성군:D22;강원 양양군:D20;경기 수원시 장안구:C01;경기 수원시 권선구:C01;경기 수원시 팔달구:C01;경기 수원시 영통구:C01;경기 성남시 수정구:C04;경기 성남시 중원구:C04;경기 성남시 분당구:C04;경기 의정부시:C03;경기 안양시 만안구:C06;경기 안양시 동안구:C06;경기 부천시:C05;경기 광명시:C07;경기 평택시:C011;경기 동두천시:C08;경기 안산시 상록구:C012;경기 안산시 단원구:C012;경기 고양시 덕양구:C020;경기 고양시 일산동구:C020;경기 고양시 일산서구:C020;경기 과천시:C013;경기 구리시:C010;경기 남양주시:C021;경기 오산시:C014;경기 시흥시:C018;경기 군포시:C016;경기 의왕시:C017;경기 하남시:C015;경기 용인시 처인구:C022;경기 용인시 기흥구:C022;경기 용인시 수지구:C022;경기 파주시:C024;경기 이천시:C023;경기 안성시:C026;경기 김포시:C025;경기 화성시:C027;경기 광주시:C028;경기 양주시:C030;경기 포천시:C029;경기 여주시:C031;경기 연천군:C23;경기 가평군:C21;경기 양평군:C20;경남 창원시 의창구:L07;경남 창원시 성산구:L07;경남 창원시 마산합포구:L07;경남 창원시 마산회원구:L07;경남 창원시 진해구:L07;경남 진주시:L02;경남 통영시:L011;경남 사천시:L013;경남 김해시:L08;경남 밀양시:L09;경남 거제시:L012;경남 양산시:L014;경남 의령군:L27;경남 함안군:L14;경남 창녕군:L28;경남 고성군:L19;경남 남해군:L18;경남 하동군:L21;경남 산청군:L23;경남 함양군:L24;경남 거창군:L25;경남 합천군:L26;경북 포항시 남구:K05;경북 포항시 북구:K05;경북 경주시:K03;경북 김천시:K02;경북 안동시:K04;경북 구미시:K06;경북 영주시:K07;경북 영천시:K08;경북 상주시:K09;경북 문경시:K012;경북 경산시:K011;경북 군위군:K16;경북 의성군:K25;경북 청송군:K31;경북 영양군:K23;경북 영덕군:K32;경북 청도군:K28;경북 고령군:K12;경북 성주군:K13;경북 칠곡군:K15;경북 예천군:K20;경북 봉화군:K22;경북 울진군:K33;경북 울릉군:K34;광주 동구:Q01;광주 서구:Q02;광주 남구:Q05;광주 북구:Q03;광주 광산구:Q04;대구 중구:P01;대구 동구:P02;대구 서구:P03;대구 남구:P04;대구 북구:P05;대구 수성구:P06;대구 달서구:P07;대구 달성군:P08;대전 동구:R02;대전 중구:R04;대전 서구:R03;대전 유성구:R05;대전 대덕구:R01;부산 중구:B12;부산 서구:B13;부산 동구:B11;부산 영도구:B14;부산 부산진구:B15;부산 동래구:B16;부산 남구:B17;부산 북구:B18;부산 해운대구:B19;부산 사하구:B20;부산 금정구:B21;부산 강서구:B22;부산 연제구:B23;부산 수영구:B24;부산 사상구:B25;부산 기장군:B26;서울 종로구:A11;서울 중구:A12;서울 용산구:A18;서울 성동구:A13;서울 광진구:A34;서울 동대문구:A14;서울 중랑구:A28;서울 성북구:A15;서울 강북구:A35;서울 도봉구:A21;서울 노원구:A29;서울 은평구:A24;서울 서대문구:A16;서울 마포구:A17;서울 양천구:A31;서울 강서구:A23;서울 구로구:A26;서울 금천구:A33;서울 영등포구:A19;서울 동작구:A25;서울 관악구:A20;서울 서초구:A30;서울 강남구:A22;서울 송파구:A32;서울 강동구:A27;세종 세종시:T01;울산 중구:S01;울산 남구:S02;울산 동구:S03;울산 북구:S04;울산 울주군:S05;인천 중구:N01;인천 동구:N02;인천 미추홀구:N03;인천 연수구:N09;인천 남동구:N05;인천 부평구:N07;인천 계양구:N08;인천 서구:N06;인천 강화군:N10;인천 옹진군:N11;전남 목포시:H02;전남 여수시:H03;전남 순천시:H04;전남 나주시:H05;전남 광양시:H09;전남 담양군:H13;전남 곡성군:H14;전남 구례군:H15;전남 고흥군:H19;전남 보성군:H20;전남 화순군:H21;전남 장흥군:H28;전남 강진군:H27;전남 해남군:H29;전남 영암군:H26;전남 무안군:H25;전남 함평군:H23;전남 영광군:H24;전남 장성군:H12;전남 완도군:H30;전남 진도군:H31;전남 신안군:H32;전북 전주시 완산구:G01;전북 전주시 덕진구:G01;전북 군산시:G02;전북 익산시:G09;전북 정읍시:G08;전북 남원시:G06;전북 김제시:G07;전북 완주군:G11;전북 진안군:G22;전북 무주군:G23;전북 장수군:G21;전북 임실군:G19;전북 순창군:G18;전북 고창군:G16;전북 부안군:G15;제주 제주시:M01;제주 서귀포시:M02;충남 천안시 동남구:F02;충남 천안시 서북구:F02;충남 공주시:F03;충남 보령시:F08;충남 아산시:F07;충남 서산시:F06;충남 논산시:F09;충남 계룡시:F010;충남 당진시:F011;충남 금산군:F25;충남 부여군:F24;충남 서천군:F23;충남 청양군:F21;충남 홍성군:F20;충남 예산군:F19;충남 태안군:F26;충북 청주시 상당구:E01;충북 청주시 서원구:E01;충북 청주시 흥덕구:E01;충북 청주시 청원구:E01;충북 충주시:E02;충북 제천시:E03;충북 보은군:E12;충북 옥천군:E13;충북 영동군:E14;충북 증평군:E21;충북 진천군:E16;충북 괴산군:E15;충북 음성군:E17;충북 단양군:E20;특별 독도:IS01`.split(';').map(entry => {
+            const separator = entry.lastIndexOf(':');
+            return [entry.slice(0, separator).replace(/\s+/g, ''), entry.slice(separator + 1)];
+        });
 
         // --- STATE ---
         const STATE = {
@@ -1393,6 +1537,16 @@
             return `${prefix}${digit}${suffix}`;
         }
 
+        const KDN_CODES = [...new Set(KDN_REGIONS.map(([, code]) => code))];
+
+        function randomizeKdn(inputId) {
+            document.getElementById(inputId).value = KDN_CODES[Math.floor(Math.random() * KDN_CODES.length)];
+            saveQsoSettings();
+        }
+
+        document.getElementById('randomizeOppKdnBtn').addEventListener('click', () => randomizeKdn('oppKdn'));
+        document.getElementById('randomizeMyKdnBtn').addEventListener('click', () => randomizeKdn('myKdn'));
+
         // --- QSO STATE MACHINE ---
         function getQsoStepText() {
             const p = STATE.qsoParams;
@@ -1418,7 +1572,10 @@
             STATE.qsoStep++;
             if (STATE.qsoStep > 6) {
                 addLog(t.log_end_qso, "info");
-                stopQso();
+                cancelQsoAutoTest();
+                STATE.qsoActive = false;
+                STATE.qsoStep = 6;
+                setQsoEndButtonLabel('btn_reset_qso_complete');
                 return;
             }
 
@@ -1527,10 +1684,18 @@
             chat.scrollTop = chat.scrollHeight;
         }
 
+        function setQsoEndButtonLabel(key) {
+            const button = document.getElementById('stopQsoBtn');
+            const translations = TRANSLATIONS[STATE.lang || 'ko'] || TRANSLATIONS.ko;
+            button.dataset.i18n = key;
+            button.textContent = translations[key];
+        }
+
         function stopQso() {
             cancelQsoAutoTest();
             STATE.qsoActive = false;
             STATE.qsoStep = 0;
+            setQsoEndButtonLabel('btn_stop_qso');
             document.getElementById('qsoSetupSection').style.display = 'block';
             document.getElementById('qsoActiveSection').classList.remove('visible');
         }
@@ -1586,6 +1751,9 @@
         let keyerBusy = false;
         let keyerTimer = null;
         let lastKeyerSignal = null;
+        let serialKeyerPort = null;
+        let serialKeyerPollTimer = null;
+        let serialKeyerStatus = 'serial_disconnected';
 
         function handleTransmitStart(signal = null, inputElement = document.getElementById('tapPad')) {
             if (keyerBusy && signal === null) return;
@@ -1739,6 +1907,90 @@
             const button = document.getElementById(buttonId);
             button.classList.toggle('pressed', pressed);
             if (pressed) transmitNextPaddleElement();
+        }
+
+        function supportsWebSerial() {
+            return Boolean(window.isSecureContext && navigator.serial && navigator.serial.requestPort);
+        }
+
+        function updateSerialKeyerUI() {
+            const button = document.getElementById('serialKeyerButton');
+            const status = document.getElementById('serialKeyerStatus');
+            const labels = TRANSLATIONS[STATE.lang || 'ko'] || TRANSLATIONS.ko;
+            const supported = Boolean(navigator.serial && navigator.serial.requestPort);
+            const available = supportsWebSerial();
+
+            button.disabled = !available && !serialKeyerPort;
+            button.textContent = serialKeyerPort ? labels.serial_disconnect : labels.serial_connect;
+            if (!supported) {
+                status.textContent = labels.serial_unsupported;
+            } else if (!window.isSecureContext) {
+                status.textContent = labels.serial_secure_context;
+            } else {
+                status.textContent = labels[serialKeyerStatus] || labels.serial_disconnected;
+            }
+        }
+
+        async function pollSerialKeyerSignals() {
+            if (!serialKeyerPort) return;
+            try {
+                const signals = await serialKeyerPort.getSignals();
+                setPaddle('left', Boolean(signals.clearToSend));
+                setPaddle('right', Boolean(signals.dataSetReady));
+                serialKeyerPollTimer = setTimeout(pollSerialKeyerSignals, 20);
+            } catch (error) {
+                await disconnectSerialKeyer('serial_error');
+            }
+        }
+
+        async function disconnectSerialKeyer(status = 'serial_disconnected') {
+            clearTimeout(serialKeyerPollTimer);
+            serialKeyerPollTimer = null;
+            const port = serialKeyerPort;
+            serialKeyerPort = null;
+            setPaddle('left', false);
+            setPaddle('right', false);
+            serialKeyerStatus = status;
+            if (port) {
+                try {
+                    await port.close();
+                } catch (error) {
+                    // The device may already have been physically disconnected.
+                }
+            }
+            updateSerialKeyerUI();
+        }
+
+        async function connectSerialKeyer() {
+            if (serialKeyerPort) {
+                await disconnectSerialKeyer();
+                return;
+            }
+            if (!supportsWebSerial()) {
+                updateSerialKeyerUI();
+                return;
+            }
+
+            serialKeyerStatus = 'serial_connecting';
+            updateSerialKeyerUI();
+            try {
+                const port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
+                serialKeyerPort = port;
+                serialKeyerStatus = 'serial_connected';
+                updateSerialKeyerUI();
+                pollSerialKeyerSignals();
+            } catch (error) {
+                serialKeyerStatus = error.name === 'NotFoundError' ? 'serial_cancelled' : 'serial_error';
+                updateSerialKeyerUI();
+            }
+        }
+
+        document.getElementById('serialKeyerButton').addEventListener('click', connectSerialKeyer);
+        if (navigator.serial) {
+            navigator.serial.addEventListener('disconnect', event => {
+                if (event.target === serialKeyerPort) disconnectSerialKeyer();
+            });
         }
 
         window.addEventListener('keydown', e => {
@@ -1904,6 +2156,7 @@
             STATE.tolerance = 0.15;
             STATE.lang = 'ko';
             STATE.paddleReverse = false;
+            if (serialKeyerPort) disconnectSerialKeyer();
 
             document.getElementById('wpmSlider').value = 20;
             document.getElementById('wpmValueDisplay').innerText = "20 WPM";
@@ -1957,6 +2210,7 @@
             };
             STATE.qsoActive = true;
             STATE.qsoStep = 0;
+            setQsoEndButtonLabel('btn_stop_qso');
             document.getElementById('qsoSetupSection').style.display = 'none';
             document.getElementById('qsoActiveSection').classList.add('visible');
             document.getElementById('qsoChat').innerHTML = '';
@@ -2040,6 +2294,7 @@
 
         // Load cookies initially
         loadSavedSettings();
+        updateSerialKeyerUI();
         
         populateGrid('letters');
         
