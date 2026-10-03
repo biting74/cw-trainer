@@ -237,6 +237,20 @@
             margin-bottom: 32px;
         }
 
+        .character-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        #letterOrderToggle[aria-pressed="true"] {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background-color: rgba(0, 210, 255, 0.12);
+        }
+
         .item-card {
             background-color: var(--bg-accent);
             border: 1px solid var(--border-color);
@@ -267,6 +281,12 @@
             font-size: 20px;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
+            color: #22c55e;
+        }
+
+        .item-card-spacer {
+            min-height: 1px;
+            pointer-events: none;
         }
 
         .item-morse {
@@ -900,12 +920,13 @@
                     <p class="panel-desc" data-i18n="char_desc">연습할 항목(문자, 숫자, 특수 기호)을 선택합니다. 신호 타이밍에 맞춰 모스 부호 전송 연습을 진행합니다.</p>
                 </div>
                 
-                <div style="margin-bottom: 8px;">
+                <div class="character-controls">
                     <select id="charCategory" class="form-input" style="width: 200px;">
                         <option value="letters" data-i18n="cat_letters">문자 (A-Z)</option>
                         <option value="numbers" data-i18n="cat_numbers">숫자 (0-9)</option>
                         <option value="special" data-i18n="cat_special">특수 기호</option>
                     </select>
+                    <button class="btn" id="letterOrderToggle" type="button" aria-pressed="false" data-i18n="letter_order_alpha">알파벳순</button>
                 </div>
 
                 <div class="grid-container" id="characterGrid">
@@ -1099,6 +1120,8 @@
                 cat_letters: "문자 (A-Z)",
                 cat_numbers: "숫자 (0-9)",
                 cat_special: "특수 기호",
+                letter_order_alpha: "알파벳순",
+                letter_order_memorization: "암기순",
                 qcode_title: "Q-코드 및 약어",
                 qcode_desc: "일반적인 무선 약어와 절차를 숙달하여 기술을 향상하세요.",
                 qso_setup_title: "가상 QSO 설정",
@@ -1175,6 +1198,8 @@
                 cat_letters: "English Letters (A-Z)",
                 cat_numbers: "Numbers (0-9)",
                 cat_special: "Special Characters",
+                letter_order_alpha: "Alphabetical",
+                letter_order_memorization: "Memorization",
                 qcode_title: "Q-Codes & Abbreviations",
                 qcode_desc: "Level up your skills with common radio shorthand and procedures.",
                 qso_setup_title: "Virtual QSO Setup",
@@ -1196,6 +1221,7 @@
                 btn_reset_qso_complete: "Reset",
                 expected_label: "Wait for your turn or transmit now:",
                 label_show_morse: "Show Morse Code",
+                label_auto_test: "Auto Test Mode",
                 log_start_qso: "Starting Virtual QSO...",
                 log_end_qso: "QSO finished successfully. 73!",
                 status_receiving: "Receiving...",
@@ -1251,6 +1277,7 @@
             populateQcodes();
             updatePaddleControls();
             updateSerialKeyerUI();
+            updateLetterOrderToggle();
         }
 
         // --- COOKIE UTILITIES ---
@@ -1325,9 +1352,10 @@
 
         const ITEMS = {
             letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
-            numbers: "0123456789".split(""),
+            numbers: "1234567890".split(""),
             special: ".,?/=+()@".split("")
         };
+        const LETTER_MEMORIZATION_ORDER = "ETIMANSOUDKRWGFLQYBVHPXCZJ".split("");
 
         const QCODES = [
             { code: "CQ", meaning: { ko: "아무 스테이션 호출", en: "Call any station" } },
@@ -1360,6 +1388,7 @@
             tolerance: 0.15,
             currentTab: 'characters',
             selectedItem: 'A',
+            letterMemorizationOrder: false,
             isKeyDown: false,
             paddleReverse: false,
             audioCtx: null,
@@ -1506,7 +1535,17 @@
         function populateGrid(category) {
             const grid = document.getElementById('characterGrid');
             grid.innerHTML = '';
-            ITEMS[category].forEach(char => {
+            const characters = category === 'letters' && STATE.letterMemorizationOrder
+                ? LETTER_MEMORIZATION_ORDER
+                : ITEMS[category];
+            characters.forEach((char, index) => {
+                if (category === 'letters' && STATE.letterMemorizationOrder && [10, 20].includes(index)) {
+                    const spacer = document.createElement('div');
+                    spacer.className = 'item-card-spacer';
+                    spacer.setAttribute('aria-hidden', 'true');
+                    grid.appendChild(spacer);
+                }
+
                 const card = document.createElement('div');
                 card.className = `item-card ${STATE.selectedItem === char ? 'active' : ''}`;
                 card.innerHTML = `<span class="item-char">${char}</span><span class="item-morse">${MORSE[char]}</span>`;
@@ -1518,6 +1557,18 @@
                 };
                 grid.appendChild(card);
             });
+            updateLetterOrderToggle();
+        }
+
+        function updateLetterOrderToggle() {
+            const button = document.getElementById('letterOrderToggle');
+            if (!button) return;
+            const isLettersCategory = document.getElementById('charCategory').value === 'letters';
+            const labelKey = STATE.letterMemorizationOrder ? 'letter_order_memorization' : 'letter_order_alpha';
+            button.hidden = !isLettersCategory;
+            button.dataset.i18n = labelKey;
+            button.textContent = TRANSLATIONS[STATE.lang || 'ko'][labelKey];
+            button.setAttribute('aria-pressed', String(STATE.letterMemorizationOrder));
         }
 
         function populateQcodes() {
@@ -2119,6 +2170,11 @@
         };
 
         document.getElementById('charCategory').onchange = (e) => populateGrid(e.target.value);
+        document.getElementById('letterOrderToggle').addEventListener('click', () => {
+            STATE.letterMemorizationOrder = !STATE.letterMemorizationOrder;
+            document.getElementById('charCategory').value = 'letters';
+            populateGrid('letters');
+        });
         
         document.getElementById('wpmSlider').oninput = (e) => {
             STATE.wpm = parseInt(e.target.value);
