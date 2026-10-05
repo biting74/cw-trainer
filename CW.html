@@ -404,6 +404,10 @@
             border-color: var(--accent-color);
         }
 
+        #qsoSetupSection .form-input {
+            color: #22c55e;
+        }
+
         /* Active QSO Section */
         .active-qso {
             display: none;
@@ -1576,7 +1580,7 @@
                 ? LETTER_MEMORIZATION_ORDER
                 : ITEMS[category];
             characters.forEach((char, index) => {
-                if (category === 'letters' && STATE.letterMemorizationOrder && [10, 20].includes(index)) {
+                if (category === 'letters' && STATE.letterMemorizationOrder && [6,11,21].includes(index)) {
                     const spacer = document.createElement('div');
                     spacer.className = 'item-card-spacer';
                     spacer.setAttribute('aria-hidden', 'true');
