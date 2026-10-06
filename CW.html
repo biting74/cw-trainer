@@ -56,6 +56,10 @@
             flex-direction: column;
             padding: 24px;
             z-index: 100;
+            touch-action: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            user-select: none;
         }
 
         .logo {
@@ -1076,9 +1080,9 @@
         </div>
 
         <!-- Parsed Morse Output -->
-        <div id="parsedOutput" style="padding: 10px 32px; font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--accent-color); background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 16px; touch-action: none;">
-            <div style="flex-shrink: 0; font-weight: 700; color: var(--text-primary);" data-i18n="output_label">출력:</div>
-            <div id="parsedScrollContainer" style="flex: 1; overflow-x: auto; white-space: nowrap; scrollbar-width: none;">
+        <div id="parsedOutput" style="padding: 10px 32px; font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--accent-color); background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 16px; touch-action: none; -webkit-user-select: none; -webkit-touch-callout: none; user-select: none;">
+            <div style="flex-shrink: 0; font-weight: 700; color: var(--text-primary); pointer-events: none;" data-i18n="output_label">출력:</div>
+            <div id="parsedScrollContainer" style="flex: 1; overflow-x: auto; white-space: nowrap; scrollbar-width: none; pointer-events: none;">
                 <span id="parsedText">-</span>
             </div>
             <button class="btn" id="clearOutputBtn" style="padding: 4px 12px; font-size: 12px; height: 32px; margin-left: auto;" data-i18n="btn_clear">지우기</button>
