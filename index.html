@@ -1606,9 +1606,10 @@
             playListeningMorse(item, qcode?.morse, () => {
                 scheduleListeningTimer(() => {
                     const speechText = STATE.currentTab === 'characters' &&
-                        document.getElementById('charCategory').value === 'special' &&
-                        STATE.lang === 'en'
-                        ? SPECIAL_SPEECH_LABELS[item]
+                        document.getElementById('charCategory').value === 'special'
+                        ? STATE.lang === 'en'
+                            ? SPECIAL_SPEECH_LABELS[item]
+                            : (SPECIAL_SPEECH_LABELS_KO[item] || item)
                         : qcode
                             ? item.split('').join(', ')
                             : item;
@@ -1692,6 +1693,10 @@
             '@': 'at sign',
             '(': 'left parenthesis',
             ')': 'right parenthesis'
+        };
+        const SPECIAL_SPEECH_LABELS_KO = {
+            '(': '여는 괄호',
+            ')': '닫는 괄호'
         };
         const LETTER_MEMORIZATION_ORDER = "ETIMANSOUDKRWGFLQYBVHPXCZJ".split("");
 
