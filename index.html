@@ -902,6 +902,13 @@
                 </div>
                 <div class="slider-wrapper">
                     <div class="slider-label">
+                        <span data-i18n="sidebar_listening_delay">재생 지연 시간</span>
+                        <span class="slider-val" id="delayValueDisplay">3s</span>
+                    </div>
+                    <input type="range" id="delaySlider" min="1" max="10" value="3">
+                </div>
+                <div class="slider-wrapper">
+                    <div class="slider-label">
                         <span data-i18n="sidebar_lang">언어</span>
                     </div>
                     <select id="langSelect" class="form-input" style="width: 100%; margin-top: 4px;">
@@ -967,6 +974,7 @@
                         <option value="special" data-i18n="cat_special">특수 기호</option>
                     </select>
                     <button class="btn" id="letterOrderToggle" type="button" aria-pressed="false" data-i18n="letter_order_alpha">알파벳순</button>
+                    <button class="btn btn-primary" id="charRandomListeningBtn" type="button" aria-pressed="false" data-i18n="btn_random_listening_start">🎧 랜덤 듣기 시작</button>
                 </div>
 
                 <div class="grid-container" id="characterGrid">
@@ -980,7 +988,11 @@
                     <h2 class="panel-title" data-i18n="qcode_title">Q-코드 및 약어</h2>
                     <p class="panel-desc" data-i18n="qcode_desc">일반적인 무선 약어와 절차를 숙달하여 기술을 향상하세요.</p>
                 </div>
-                
+
+                <div class="character-controls">
+                    <button class="btn btn-primary" id="qcodeRandomListeningBtn" type="button" aria-pressed="false" data-i18n="btn_random_listening_start">🎧 랜덤 듣기 시작</button>
+                </div>
+
                 <div class="grid-container" id="qcodeGrid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));">
                     <!-- Dynamic Q-Codes -->
                 </div>
@@ -1152,6 +1164,7 @@
                 sidebar_key_status: "키 상태",
                 sidebar_version: "Expert Grade Morse Simulator v2.5",
                 sidebar_develop: "Designed & Developed by DS1UZO, 6K2MAM",
+                sidebar_listening_delay: "재생 지연 시간",
                 tab_characters: "문자 연습",
                 tab_qcodes: "Q-코드/약어",
                 tab_qso: "가상 QSO",
@@ -1162,6 +1175,9 @@
                 cat_special: "특수 기호",
                 letter_order_alpha: "알파벳순",
                 letter_order_memorization: "암기순",
+                btn_random_listening_start: "🎧 랜덤 듣기 시작",
+                btn_random_listening_stop: "🛑 듣기 중지",
+                listening_voice_unsupported: "이 브라우저에서는 음성 재생을 지원하지 않습니다.",
                 qcode_title: "Q-코드 및 약어",
                 qcode_desc: "일반적인 무선 약어와 절차를 숙달하여 기술을 향상하세요.",
                 qso_setup_title: "가상 QSO 설정",
@@ -1230,6 +1246,7 @@
                 sidebar_key_status: "Key Status",
                 sidebar_version: "Expert Grade Morse Simulator v2.5",
                 sidebar_develop: "Designed & Developed by DS1UZO, 6K2MAM",
+                sidebar_listening_delay: "Listening Delay",
                 tab_characters: "Characters",
                 tab_qcodes: "Q-Codes & Abbreviations",
                 tab_qso: "Virtual QSO",
@@ -1240,6 +1257,9 @@
                 cat_special: "Special Characters",
                 letter_order_alpha: "Alphabetical",
                 letter_order_memorization: "Memorization",
+                btn_random_listening_start: "🎧 Start Listening",
+                btn_random_listening_stop: "🛑 Stop Listening",
+                listening_voice_unsupported: "Speech playback is not supported by this browser.",
                 qcode_title: "Q-Codes & Abbreviations",
                 qcode_desc: "Level up your skills with common radio shorthand and procedures.",
                 qso_setup_title: "Virtual QSO Setup",
@@ -1349,10 +1369,159 @@
                 pitch: parseInt(document.getElementById('pitchSlider').value),
                 volume: parseInt(document.getElementById('volSlider').value),
                 tolerance: parseInt(document.getElementById('tolSlider').value),
+                listeningDelay: parseInt(document.getElementById('delaySlider').value),
                 lang: document.getElementById('langSelect').value,
                 paddleReverse: STATE.paddleReverse
             };
             setCookie('cw_trainer_global_settings', JSON.stringify(settings), 90);
+        }
+
+        function scheduleListeningTimer(callback, delay) {
+            const timer = setTimeout(() => {
+                STATE.listeningTimers = STATE.listeningTimers.filter(id => id !== timer);
+                if (STATE.randomListeningActive) callback();
+            }, delay);
+            STATE.listeningTimers.push(timer);
+            return timer;
+        }
+
+        function speakText(text, onDone) {
+            if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') {
+                window.alert(TRANSLATIONS[STATE.lang || 'ko'].listening_voice_unsupported);
+                stopRandomListening();
+                return false;
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = STATE.lang === 'ko' ? 'ko-KR' : 'en-US';
+            utterance.rate = 0.9;
+            utterance.onend = onDone;
+            utterance.onerror = () => {
+                if (!STATE.randomListeningActive) return;
+                window.alert(TRANSLATIONS[STATE.lang || 'ko'].listening_voice_unsupported);
+                stopRandomListening();
+            };
+            window.speechSynthesis.speak(utterance);
+            return true;
+        }
+
+        function playListeningMorse(item, morseOverride, onDone) {
+            const dot = 1200 / STATE.wpm;
+            const beats = [];
+            let time = 0;
+
+            const scheduleTone = symbol => {
+                const duration = symbol === '.' ? dot : dot * 3;
+                beats.push({ type: 'sys', start: time, duration, correct: true });
+                scheduleListeningTimer(startTone, time);
+                scheduleListeningTimer(stopTone, time + duration);
+                time += duration;
+            };
+
+            if (morseOverride) {
+                const symbols = morseOverride.split('');
+                symbols.forEach((symbol, index) => {
+                    scheduleTone(symbol);
+                    if (index < symbols.length - 1) time += dot;
+                });
+            } else {
+                const characters = item.toUpperCase().split('');
+                characters.forEach((char, index) => {
+                    const code = MORSE[char];
+                    if (!code || code === ' ') return;
+
+                    const symbols = code.split('');
+                    symbols.forEach((symbol, symbolIndex) => {
+                        scheduleTone(symbol);
+                        if (symbolIndex < symbols.length - 1) time += dot;
+                    });
+                    if (index < characters.length - 1) {
+                        time += characters[index + 1] === ' ' ? dot * 7 : dot * 3;
+                    }
+                });
+            }
+
+            const timelineStart = performance.now() - STATE.startTime;
+            beats.forEach(beat => STATE.blocks.push({
+                ...beat,
+                start: timelineStart + beat.start
+            }));
+            scheduleListeningTimer(onDone, Math.max(0, time));
+        }
+
+        function updateListeningButtons() {
+            const translationKey = STATE.randomListeningActive
+                ? 'btn_random_listening_stop'
+                : 'btn_random_listening_start';
+            ['charRandomListeningBtn', 'qcodeRandomListeningBtn'].forEach(id => {
+                const button = document.getElementById(id);
+                button.dataset.i18n = translationKey;
+                button.setAttribute('aria-pressed', String(STATE.randomListeningActive));
+            });
+            updateUI(STATE.lang || 'ko');
+        }
+
+        function stopRandomListening() {
+            STATE.randomListeningActive = false;
+            STATE.listeningTimers.forEach(clearTimeout);
+            STATE.listeningTimers = [];
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            stopTone();
+            updateListeningButtons();
+        }
+
+        function startRandomListeningLoop() {
+            if (!STATE.randomListeningActive) return;
+
+            let pool = [];
+            if (STATE.currentTab === 'characters') {
+                const cat = document.getElementById('charCategory').value;
+                pool = ITEMS[cat];
+            } else if (STATE.currentTab === 'qcodes') {
+                pool = QCODES.map(q => q.code);
+            }
+
+            if (pool.length === 0) {
+                stopRandomListening();
+                return;
+            }
+
+            const item = pool[Math.floor(Math.random() * pool.length)];
+            STATE.selectedItem = item;
+
+            document.querySelectorAll('.item-card').forEach(card => {
+                card.classList.remove('active');
+                if (card.querySelector('.item-char')?.textContent === item) {
+                    card.classList.add('active');
+                    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+
+            const qcode = STATE.currentTab === 'qcodes'
+                ? QCODES.find(entry => entry.code === item)
+                : null;
+            playListeningMorse(item, qcode?.morse, () => {
+                scheduleListeningTimer(() => {
+                    const speechText = STATE.currentTab === 'characters' &&
+                        document.getElementById('charCategory').value === 'special' &&
+                        STATE.lang === 'en'
+                        ? SPECIAL_SPEECH_LABELS[item]
+                        : item;
+                    speakText(speechText, () => {
+                        scheduleListeningTimer(startRandomListeningLoop, 1000);
+                    });
+                }, STATE.listeningDelay * 1000);
+            });
+        }
+
+        function toggleRandomListening() {
+            STATE.randomListeningActive = !STATE.randomListeningActive;
+            if (STATE.randomListeningActive) {
+                initAudio();
+                updateListeningButtons();
+                startRandomListeningLoop();
+            } else {
+                stopRandomListening();
+            }
         }
 
         function saveQsoSettings() {
@@ -1399,6 +1568,18 @@
             '=': 'BT', '?': 'IMI', '/': 'DN', '+': 'AR', '-': 'DU',
             '.': 'AAA', ',': 'MIM', '@': 'AC', '(': 'KN', ')': 'KNT'
         };
+        const SPECIAL_SPEECH_LABELS = {
+            '=': 'equals sign',
+            '?': 'question mark',
+            '/': 'slash',
+            '+': 'plus sign',
+            '-': 'minus sign',
+            '.': 'period',
+            ',': 'comma',
+            '@': 'at sign',
+            '(': 'left parenthesis',
+            ')': 'right parenthesis'
+        };
         const LETTER_MEMORIZATION_ORDER = "ETIMANSOUDKRWGFLQYBVHPXCZJ".split("");
 
         const QCODES = [
@@ -1417,7 +1598,7 @@
             { code: "R", meaning: { ko: "수신 완료", en: "Received" } },
             { code: "KN", morse: "-.--.", meaning: { ko: "지정 상대에게 송신권 전달", en: "Over to a specific station" } },
             { code: "AR", morse: ".-.-.", meaning: { ko: "메시지 송신 끝", en: "End of message" } },
-            { code: "SK (VA)", morse: "...-.-", meaning: { ko: "교신 완전 종료", en: "End of contact" } },
+            { code: "SK", morse: "...-.-", meaning: { ko: "교신 완전 종료", en: "End of contact" } },
             { code: "AS", morse: ".-...", meaning: { ko: "잠시 대기", en: "Wait" } },
             { code: "BK", morse: "-...-.-", meaning: { ko: "송신 중단 및 즉시 응답", en: "Break in / immediate reply" } }
         ];
@@ -1433,6 +1614,9 @@
             pitch: 700,
             volume: 0.5,
             tolerance: 0.15,
+            listeningDelay: 3,
+            randomListeningActive: false,
+            listeningTimers: [],
             currentTab: 'characters',
             selectedItem: 'A',
             letterMemorizationOrder: false,
@@ -1593,6 +1777,9 @@
 
         // --- UI HELPERS ---
         function updateTab(tabId) {
+            if (STATE.randomListeningActive && STATE.currentTab !== tabId) {
+                stopRandomListening();
+            }
             STATE.currentTab = tabId;
             document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
             document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
@@ -2198,6 +2385,14 @@
                         STATE.lang = settings.lang;
                         document.getElementById('langSelect').value = settings.lang;
                     }
+                    if (settings.listeningDelay !== undefined) {
+                        const delay = Number(settings.listeningDelay);
+                        if (Number.isFinite(delay)) {
+                            STATE.listeningDelay = Math.min(10, Math.max(1, Math.round(delay)));
+                            document.getElementById('delaySlider').value = STATE.listeningDelay;
+                            document.getElementById('delayValueDisplay').innerText = `${STATE.listeningDelay}s`;
+                        }
+                    }
                     if (settings.paddleReverse !== undefined) STATE.paddleReverse = settings.paddleReverse;
                 } catch (e) {
                     console.error("Error parsing global settings cookie", e);
@@ -2270,6 +2465,14 @@
             document.getElementById('tolValueDisplay').innerText = `${e.target.value}%`;
             saveGlobalSettings();
         };
+        document.getElementById('delaySlider').oninput = (e) => {
+            STATE.listeningDelay = parseInt(e.target.value);
+            document.getElementById('delayValueDisplay').innerText = `${STATE.listeningDelay}s`;
+            saveGlobalSettings();
+        };
+
+        document.getElementById('charRandomListeningBtn').onclick = toggleRandomListening;
+        document.getElementById('qcodeRandomListeningBtn').onclick = toggleRandomListening;
 
         document.getElementById('randomizeCallBtn').onclick = () => {
             document.getElementById('oppCall').value = generateRandomCallsign();
@@ -2295,6 +2498,7 @@
             STATE.pitch = 700;
             STATE.volume = 0.25;
             STATE.tolerance = 0.15;
+            STATE.listeningDelay = 3;
             STATE.lang = 'ko';
             STATE.paddleReverse = false;
             if (serialKeyerPort) disconnectSerialKeyer();
@@ -2310,6 +2514,9 @@
 
             document.getElementById('tolSlider').value = 15;
             document.getElementById('tolValueDisplay').innerText = "15%";
+
+            document.getElementById('delaySlider').value = 3;
+            document.getElementById('delayValueDisplay').innerText = "3s";
 
             document.getElementById('langSelect').value = 'ko';
 
