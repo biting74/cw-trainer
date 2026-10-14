@@ -1689,13 +1689,42 @@
             updateListeningButtons();
         }
 
+        function getNextRandomListeningItem(pool, poolKey) {
+            if (STATE.randomListeningPoolKey !== poolKey) {
+                STATE.randomListeningPoolKey = poolKey;
+                STATE.randomListeningDeck = [];
+                STATE.lastRandomListeningItem = null;
+            }
+
+            if (STATE.randomListeningDeck.length === 0) {
+                STATE.randomListeningDeck = [...pool];
+                for (let index = STATE.randomListeningDeck.length - 1; index > 0; index--) {
+                    const randomIndex = Math.floor(Math.random() * (index + 1));
+                    [STATE.randomListeningDeck[index], STATE.randomListeningDeck[randomIndex]] =
+                        [STATE.randomListeningDeck[randomIndex], STATE.randomListeningDeck[index]];
+                }
+                const lastIndex = STATE.randomListeningDeck.length - 1;
+                if (STATE.randomListeningDeck.length > 1 &&
+                    STATE.randomListeningDeck[lastIndex] === STATE.lastRandomListeningItem) {
+                    [STATE.randomListeningDeck[lastIndex], STATE.randomListeningDeck[lastIndex - 1]] =
+                        [STATE.randomListeningDeck[lastIndex - 1], STATE.randomListeningDeck[lastIndex]];
+                }
+            }
+
+            const item = STATE.randomListeningDeck.pop();
+            STATE.lastRandomListeningItem = item;
+            return item;
+        }
+
         function startRandomListeningLoop() {
             if (!STATE.randomListeningActive) return;
 
             let pool = [];
+            let poolKey = STATE.currentTab;
             if (STATE.currentTab === 'characters') {
                 const cat = document.getElementById('charCategory').value;
                 pool = ITEMS[cat];
+                poolKey += `:${cat}`;
             } else if (STATE.currentTab === 'qcodes') {
                 pool = QCODES.map(q => q.code);
             }
@@ -1705,7 +1734,7 @@
                 return;
             }
 
-            const item = pool[Math.floor(Math.random() * pool.length)];
+            const item = getNextRandomListeningItem(pool, poolKey);
             STATE.selectedItem = item;
 
             document.querySelectorAll('.item-card').forEach(card => {
@@ -1746,6 +1775,9 @@
         function toggleRandomListening() {
             STATE.randomListeningActive = !STATE.randomListeningActive;
             if (STATE.randomListeningActive) {
+                STATE.randomListeningDeck = [];
+                STATE.randomListeningPoolKey = null;
+                STATE.lastRandomListeningItem = null;
                 STATE.wakeLockDisabledReason = null;
                 STATE.wakeLockStartedAt = Date.now();
                 STATE.wakeLockTimer = setTimeout(() => {
@@ -1980,6 +2012,9 @@
             speechRate: 1.3,
             randomListeningActive: false,
             listeningTimers: [],
+            randomListeningDeck: [],
+            randomListeningPoolKey: null,
+            lastRandomListeningItem: null,
             qcodeReadMeaning: false,
             currentTab: 'characters',
             selectedItem: 'A',
