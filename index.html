@@ -21,7 +21,7 @@
             --danger: #ef4444;
             --warning: #f59e0b;
             --sidebar-width: 280px;
-            --bottom-height: 180px;
+            --bottom-height: 120px;
         }
 
         * {
@@ -506,7 +506,7 @@
             height: var(--bottom-height);
             background-color: var(--bg-secondary);
             border-top: 1px solid var(--border-color);
-            padding: 16px 24px;
+            padding: 10px 24px;
             position: relative;
             touch-action: none;
             -webkit-user-select: none;
@@ -518,7 +518,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
         }
 
         .timeline-title {
@@ -545,7 +545,7 @@
 
         .canvas-container {
             width: 100%;
-            height: 100px;
+            height: 66.67px;
             background-color: var(--bg-primary);
             border-radius: 8px;
             overflow: hidden;
@@ -610,7 +610,7 @@
         .tap-pad {
             flex: 0.8;
             min-width: 0;
-            height: 60px;
+            height: 120px;
             background: linear-gradient(135deg, var(--bg-accent), #242c3a);
             border: 2px dashed var(--border-color);
             border-radius: 12px;
@@ -650,7 +650,7 @@
         }
         .reverse-toggle {
             flex: 0 0 82px;
-            height: 60px;
+            height: 120px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -780,10 +780,10 @@
                 gap: 8px;
             }
             .tap-pad {
-                height: 60px;
+                height: calc(60px + clamp(41px, 5.9vw, 45px));
             }
             .reverse-toggle {
-                height: 60px;
+                height: calc(60px + clamp(41px, 5.9vw, 45px));
                 flex-basis: 72px;
             }
             .tap-pad-text {
@@ -796,19 +796,19 @@
                 display: none;
             }
             :root {
-                --bottom-height: clamp(122px, 17.7vw, 136px);
+                --bottom-height: clamp(81px, 11.8vw, 91px);
             }
             .bottom-timeline {
-                padding: 6px 12px;
+                padding: 3px 12px;
             }
             .timeline-header {
-                margin-bottom: 4px;
+                margin-bottom: 2px;
             }
             .timeline-title {
                 display: none;
             }
             .canvas-container {
-                height: 90px;
+                height: 60px;
             }
         }
 
@@ -2546,10 +2546,10 @@
 
                 if (b.type === 'sys') {
                     ctx.fillStyle = '#64748b';
-                    ctx.fillRect(x, 10, width, b.duration > 1000 ? 35 : 35); // responsive heights
+                    ctx.fillRect(x, h * 0.1, width, h * 0.35);
                 } else {
                     ctx.fillStyle = b.correct ? '#10b981' : '#ef4444';
-                    ctx.fillRect(x, 55, width, 35);
+                    ctx.fillRect(x, h * 0.55, width, h * 0.35);
                 }
             });
 
