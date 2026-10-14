@@ -371,6 +371,14 @@
             gap: 8px;
         }
 
+        .btn[hidden] {
+            display: none;
+        }
+
+        #randomListeningProgress[hidden] {
+            display: none;
+        }
+
         .btn:hover {
             border-color: var(--text-muted);
             background-color: #242c3a;
@@ -1015,7 +1023,6 @@
                     </select>
                     <button class="btn" id="letterOrderToggle" type="button" aria-pressed="false" data-i18n="letter_order_alpha">알파벳순</button>
                     <button class="btn btn-primary" id="charRandomListeningBtn" type="button" aria-pressed="false" data-i18n="btn_random_listening_start">🎧 랜덤 듣기 시작</button>
-                    <button class="btn" id="charPauseListeningBtn" type="button" disabled data-i18n="btn_random_listening_pause">⏸️ 일시정지</button>
                 </div>
                 <div id="charWakeLockStatus" role="status" aria-live="polite" style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;"></div>
 
@@ -1033,10 +1040,13 @@
 
                 <div class="character-controls">
                     <button class="btn btn-primary" id="qcodeRandomListeningBtn" type="button" aria-pressed="false" data-i18n="btn_random_listening_start">🎧 랜덤 듣기 시작</button>
-                    <button class="btn" id="qcodePauseListeningBtn" type="button" disabled data-i18n="btn_random_listening_pause">⏸️ 일시정지</button>
                     <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
                         <input type="checkbox" id="qcodeReadMeaningToggle">
                         <span data-i18n="label_qcode_read_meaning">설명 듣기</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="qcodePlayMorseToggle" checked>
+                        <span data-i18n="label_qcode_play_morse">모스부호 재생</span>
                     </label>
                 </div>
                 <div id="qcodeWakeLockStatus" role="status" aria-live="polite" style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;"></div>
@@ -1154,11 +1164,15 @@
 
         <!-- Parsed Morse Output -->
         <div id="parsedOutput" style="padding: 10px 32px; font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--accent-color); background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 16px; touch-action: none; -webkit-user-select: none; -webkit-touch-callout: none; user-select: none;">
-            <div style="flex-shrink: 0; font-weight: 700; color: var(--text-primary); pointer-events: none;" data-i18n="output_label">출력:</div>
+            <div id="outputLabel" style="flex-shrink: 0; font-weight: 700; color: var(--text-primary); pointer-events: none;" data-i18n="output_label">출력:</div>
             <div id="parsedScrollContainer" style="flex: 1; overflow-x: auto; white-space: nowrap; scrollbar-width: none; pointer-events: none;">
                 <span id="parsedText">-</span>
             </div>
             <button class="btn" id="clearOutputBtn" style="padding: 4px 12px; font-size: 12px; height: 32px; margin-left: auto;" data-i18n="btn_clear">지우기</button>
+            <div id="randomListeningProgress" hidden style="flex: 1; display: flex; align-items: center; gap: 12px;">
+                <span id="randomListeningProgressText" role="status" aria-live="polite" style="font-size: 16px; font-weight: 700; color: var(--text-primary);"></span>
+                <button class="btn" id="randomListeningPauseBtn" type="button" disabled hidden style="padding: 4px 12px; font-size: 12px; height: 32px; flex-shrink: 0;" data-i18n="btn_random_listening_pause">⏸️ 일시정지</button>
+            </div>
         </div>
 
         <!-- Global Bottom Timeline -->
@@ -1231,6 +1245,7 @@
                 btn_random_listening_stop: "🛑 듣기 중지",
                 btn_random_listening_pause: "⏸️ 일시정지",
                 btn_random_listening_resume: "▶️ 계속 듣기",
+                listening_progress: "재생 {played}/{total} · 반복 {rounds}회",
                 wake_lock_active: "화면 꺼짐 방지 활성화 (최대 1시간)",
                 wake_lock_active_battery_unknown: "화면 꺼짐 방지 활성화 (최대 1시간, 배터리 잔량 확인 불가)",
                 wake_lock_battery_low: "배터리 잔량 30% 미만: 화면 꺼짐 방지를 해제했습니다.",
@@ -1238,6 +1253,7 @@
                 wake_lock_unavailable: "이 브라우저에서는 화면 꺼짐 방지를 지원하지 않습니다.",
                 wake_lock_error: "화면 꺼짐 방지를 활성화하지 못했습니다.",
                 label_qcode_read_meaning: "설명 듣기",
+                label_qcode_play_morse: "모스부호 재생",
                 listening_voice_unsupported: "이 브라우저에서는 음성 재생을 지원하지 않습니다.",
                 qcode_title: "Q-코드 및 약어",
                 qcode_desc: "일반적인 무선 약어와 절차를 숙달하여 기술을 향상하세요.",
@@ -1326,6 +1342,7 @@
                 btn_random_listening_stop: "🛑 Stop Listening",
                 btn_random_listening_pause: "⏸️ Pause",
                 btn_random_listening_resume: "▶️ Resume",
+                listening_progress: "Played {played}/{total} · Rounds {rounds}",
                 wake_lock_active: "Screen will stay awake (up to 1 hour)",
                 wake_lock_active_battery_unknown: "Screen will stay awake (up to 1 hour; battery level unavailable)",
                 wake_lock_battery_low: "Battery below 30%: screen wake lock disabled.",
@@ -1333,6 +1350,7 @@
                 wake_lock_unavailable: "Screen wake lock is not supported by this browser.",
                 wake_lock_error: "Could not enable screen wake lock.",
                 label_qcode_read_meaning: "Read meanings",
+                label_qcode_play_morse: "Play Morse",
                 listening_voice_unsupported: "Speech playback is not supported by this browser.",
                 qcode_title: "Q-Codes & Abbreviations",
                 qcode_desc: "Level up your skills with common radio shorthand and procedures.",
@@ -1413,6 +1431,7 @@
             updatePaddleControls();
             updateSerialKeyerUI();
             updateLetterOrderToggle();
+            if (STATE.randomListeningActive) updateRandomListeningProgress();
         }
 
         // --- COOKIE UTILITIES ---
@@ -1449,6 +1468,7 @@
                 speechVoiceURIs: STATE.speechVoiceURIs,
                 speechRate: STATE.speechRate,
                 qcodeReadMeaning: document.getElementById('qcodeReadMeaningToggle').checked,
+                qcodePlayMorse: document.getElementById('qcodePlayMorseToggle').checked,
                 paddleReverse: STATE.paddleReverse
             };
             setCookie('cw_trainer_global_settings', JSON.stringify(settings), 90);
@@ -1683,18 +1703,44 @@
             const translationKey = !STATE.randomListeningActive
                 ? 'btn_random_listening_start'
                 : 'btn_random_listening_stop';
-            [['charRandomListeningBtn', 'charPauseListeningBtn'], ['qcodeRandomListeningBtn', 'qcodePauseListeningBtn']]
-                .forEach(([listenId, pauseId]) => {
+            ['charRandomListeningBtn', 'qcodeRandomListeningBtn']
+                .forEach(listenId => {
                 const button = document.getElementById(listenId);
                 button.dataset.i18n = translationKey;
                 button.setAttribute('aria-pressed', String(STATE.randomListeningActive && !STATE.randomListeningPaused));
-                const pauseButton = document.getElementById(pauseId);
-                pauseButton.dataset.i18n = STATE.randomListeningPaused
-                    ? 'btn_random_listening_resume'
-                    : 'btn_random_listening_pause';
-                pauseButton.disabled = !STATE.randomListeningActive;
             });
+            const pauseButton = document.getElementById('randomListeningPauseBtn');
+            pauseButton.dataset.i18n = STATE.randomListeningPaused
+                ? 'btn_random_listening_resume'
+                : 'btn_random_listening_pause';
+            pauseButton.disabled = !STATE.randomListeningActive;
+            pauseButton.hidden = !STATE.randomListeningActive;
+            setRandomListeningProgressVisible(STATE.randomListeningActive);
             updateUI(STATE.lang || 'ko');
+        }
+
+        function setRandomListeningProgressVisible(visible) {
+            document.getElementById('outputLabel').hidden = visible;
+            document.getElementById('parsedScrollContainer').hidden = visible;
+            document.getElementById('clearOutputBtn').hidden = visible;
+            document.getElementById('randomListeningProgress').hidden = !visible;
+        }
+
+        function updateRandomListeningProgress() {
+            const template = TRANSLATIONS[STATE.lang || 'ko'].listening_progress;
+            document.getElementById('randomListeningProgressText').textContent = template
+                .replace('{played}', STATE.randomListeningCyclePlayed)
+                .replace('{total}', STATE.randomListeningCycleTotal)
+                .replace('{rounds}', STATE.randomListeningCompletedRounds);
+        }
+
+        function completeRandomListeningItem() {
+            STATE.currentRandomListeningItem = null;
+            STATE.randomListeningCyclePlayed++;
+            if (STATE.randomListeningCyclePlayed >= STATE.randomListeningCycleTotal) {
+                STATE.randomListeningCompletedRounds++;
+            }
+            updateRandomListeningProgress();
         }
 
         function cancelListeningPlayback(requeueCurrentItem = false) {
@@ -1748,9 +1794,17 @@
                 STATE.randomListeningPoolKey = poolKey;
                 STATE.randomListeningDeck = [];
                 STATE.lastRandomListeningItem = null;
+                STATE.randomListeningCyclePlayed = 0;
+                STATE.randomListeningCompletedRounds = 0;
+                STATE.randomListeningCycleTotal = pool.length;
+                updateRandomListeningProgress();
             }
 
             if (STATE.randomListeningDeck.length === 0) {
+                if (STATE.randomListeningCyclePlayed >= STATE.randomListeningCycleTotal) {
+                    STATE.randomListeningCyclePlayed = 0;
+                    updateRandomListeningProgress();
+                }
                 STATE.randomListeningDeck = [...pool];
                 for (let index = STATE.randomListeningDeck.length - 1; index > 0; index--) {
                     const randomIndex = Math.floor(Math.random() * (index + 1));
@@ -1803,7 +1857,7 @@
             const qcode = STATE.currentTab === 'qcodes'
                 ? QCODES.find(entry => entry.code === item)
                 : null;
-            playListeningMorse(item, qcode?.morse, () => {
+            const continueWithSpeech = (skipDelay = false) => {
                 scheduleListeningTimer(() => {
                     const speechText = STATE.currentTab === 'characters' &&
                         document.getElementById('charCategory').value === 'special'
@@ -1817,16 +1871,22 @@
                         const meaning = qcode?.meaning?.[STATE.lang];
                         if (qcode && document.getElementById('qcodeReadMeaningToggle').checked && meaning) {
                             speakText(meaning, () => {
-                                STATE.currentRandomListeningItem = null;
+                                completeRandomListeningItem();
                                 scheduleListeningTimer(startRandomListeningLoop, 1000);
                             });
                         } else {
-                            STATE.currentRandomListeningItem = null;
+                            completeRandomListeningItem();
                             scheduleListeningTimer(startRandomListeningLoop, 1000);
                         }
                     });
-                }, STATE.listeningDelay * 1000);
-            });
+                }, skipDelay ? 0 : STATE.listeningDelay * 1000);
+            };
+            if (qcode && document.getElementById('qcodeReadMeaningToggle').checked &&
+                !document.getElementById('qcodePlayMorseToggle').checked) {
+                continueWithSpeech(true);
+            } else {
+                playListeningMorse(item, qcode?.morse, continueWithSpeech);
+            }
         }
 
         function toggleRandomListening() {
@@ -1836,6 +1896,9 @@
                 STATE.randomListeningPoolKey = null;
                 STATE.lastRandomListeningItem = null;
                 STATE.currentRandomListeningItem = null;
+                STATE.randomListeningCyclePlayed = 0;
+                STATE.randomListeningCompletedRounds = 0;
+                STATE.randomListeningCycleTotal = 0;
                 STATE.randomListeningPaused = false;
                 STATE.randomListeningNeedsRestart = false;
                 STATE.wakeLockDisabledReason = null;
@@ -2098,7 +2161,11 @@
             randomListeningPoolKey: null,
             lastRandomListeningItem: null,
             currentRandomListeningItem: null,
+            randomListeningCyclePlayed: 0,
+            randomListeningCycleTotal: 0,
+            randomListeningCompletedRounds: 0,
             qcodeReadMeaning: false,
+            qcodePlayMorse: true,
             currentTab: 'characters',
             selectedItem: 'A',
             letterMemorizationOrder: false,
@@ -2884,6 +2951,13 @@
                         STATE.qcodeReadMeaning = Boolean(settings.qcodeReadMeaning);
                         document.getElementById('qcodeReadMeaningToggle').checked = STATE.qcodeReadMeaning;
                     }
+                    if (settings.qcodePlayMorse !== undefined) {
+                        STATE.qcodePlayMorse = Boolean(settings.qcodePlayMorse);
+                        document.getElementById('qcodePlayMorseToggle').checked = STATE.qcodePlayMorse;
+                    } else if (settings.qcodeSkipMorse !== undefined) {
+                        STATE.qcodePlayMorse = !Boolean(settings.qcodeSkipMorse);
+                        document.getElementById('qcodePlayMorseToggle').checked = STATE.qcodePlayMorse;
+                    }
                     if (settings.speechVoiceURIs && typeof settings.speechVoiceURIs === 'object') {
                         STATE.speechVoiceURIs = {
                             ko: typeof settings.speechVoiceURIs.ko === 'string' ? settings.speechVoiceURIs.ko : '',
@@ -2964,6 +3038,10 @@
             STATE.qcodeReadMeaning = e.target.checked;
             saveGlobalSettings();
         };
+        document.getElementById('qcodePlayMorseToggle').onchange = (e) => {
+            STATE.qcodePlayMorse = e.target.checked;
+            saveGlobalSettings();
+        };
         if (window.speechSynthesis) {
             window.speechSynthesis.addEventListener('voiceschanged', populateSpeechVoices);
         }
@@ -3006,8 +3084,7 @@
 
         document.getElementById('charRandomListeningBtn').onclick = toggleRandomListening;
         document.getElementById('qcodeRandomListeningBtn').onclick = toggleRandomListening;
-        document.getElementById('charPauseListeningBtn').onclick = pauseRandomListening;
-        document.getElementById('qcodePauseListeningBtn').onclick = pauseRandomListening;
+        document.getElementById('randomListeningPauseBtn').onclick = pauseRandomListening;
 
         document.getElementById('randomizeCallBtn').onclick = () => {
             document.getElementById('oppCall').value = generateRandomCallsign();
@@ -3060,6 +3137,9 @@
             document.getElementById('speechRateSlider').value = 1.3;
             document.getElementById('speechRateValueDisplay').innerText = "1.3x";
             document.getElementById('qcodeReadMeaningToggle').checked = false;
+            document.getElementById('qcodePlayMorseToggle').checked = true;
+            STATE.qcodeReadMeaning = false;
+            STATE.qcodePlayMorse = true;
 
             saveGlobalSettings();
             updateUI('ko');
