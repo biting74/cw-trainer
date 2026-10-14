@@ -1498,12 +1498,27 @@
                 .find(voice => voice.voiceURI === STATE.speechVoiceURIs[STATE.lang]);
             if (selectedVoice) utterance.voice = selectedVoice;
             utterance.rate = STATE.speechRate;
-            utterance.onend = onDone;
-            utterance.onerror = () => {
-                if (!STATE.randomListeningActive) return;
-                window.alert(TRANSLATIONS[STATE.lang || 'ko'].listening_voice_unsupported);
-                stopRandomListening();
+            let completed = false;
+            let watchdog;
+            const finish = error => {
+                if (completed) return;
+                completed = true;
+                if (watchdog) {
+                    clearTimeout(watchdog);
+                    STATE.listeningTimers = STATE.listeningTimers.filter(timer => timer !== watchdog);
+                }
+                if (error) console.warn('Speech playback failed or timed out:', error);
+                if (STATE.randomListeningActive && onDone) onDone();
             };
+            utterance.onend = () => finish();
+            utterance.onerror = event => finish(event.error);
+
+            window.speechSynthesis.resume();
+            const timeout = Math.max(5000, Math.ceil(text.length * 500 / STATE.speechRate) + 3000);
+            watchdog = scheduleListeningTimer(() => {
+                window.speechSynthesis.cancel();
+                finish(new Error('Speech playback timed out'));
+            }, timeout);
             window.speechSynthesis.speak(utterance);
             return true;
         }
@@ -1644,6 +1659,7 @@
                     unlockUtterance.volume = 0;
                     unlockUtterance.onend = startAfterUnlock;
                     unlockUtterance.onerror = startAfterUnlock;
+                    window.speechSynthesis.resume();
                     window.speechSynthesis.speak(unlockUtterance);
                     scheduleListeningTimer(startAfterUnlock, 500);
                 } else {
