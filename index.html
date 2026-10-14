@@ -1632,7 +1632,23 @@
             if (STATE.randomListeningActive) {
                 initAudio();
                 updateListeningButtons();
-                startRandomListeningLoop();
+                if (window.speechSynthesis && typeof SpeechSynthesisUtterance !== 'undefined') {
+                    let started = false;
+                    const startAfterUnlock = () => {
+                        if (started || !STATE.randomListeningActive) return;
+                        started = true;
+                        startRandomListeningLoop();
+                    };
+                    const unlockUtterance = new SpeechSynthesisUtterance(' ');
+                    unlockUtterance.lang = STATE.lang === 'ko' ? 'ko-KR' : 'en-US';
+                    unlockUtterance.volume = 0;
+                    unlockUtterance.onend = startAfterUnlock;
+                    unlockUtterance.onerror = startAfterUnlock;
+                    window.speechSynthesis.speak(unlockUtterance);
+                    scheduleListeningTimer(startAfterUnlock, 500);
+                } else {
+                    startRandomListeningLoop();
+                }
             } else {
                 stopRandomListening();
             }
@@ -1868,11 +1884,13 @@
 
         // --- AUDIO ENGINE ---
         function initAudio() {
-            if (STATE.audioCtx) return;
-            STATE.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            STATE.gain = STATE.audioCtx.createGain();
-            STATE.gain.gain.setValueAtTime(0, STATE.audioCtx.currentTime);
-            STATE.gain.connect(STATE.audioCtx.destination);
+            if (!STATE.audioCtx) {
+                STATE.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                STATE.gain = STATE.audioCtx.createGain();
+                STATE.gain.gain.setValueAtTime(0, STATE.audioCtx.currentTime);
+                STATE.gain.connect(STATE.audioCtx.destination);
+            }
+            if (STATE.audioCtx.state === 'suspended') STATE.audioCtx.resume();
         }
 
         // Apply a high pass filter/smooth envelope to prevent clicking
