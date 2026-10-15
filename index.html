@@ -325,8 +325,10 @@
             color: #22c55e;
         }
 
-        .item-card-spacer {
-            min-height: 1px;
+        .item-card-row-break {
+            grid-column: 1 / -1;
+            height: 0;
+            margin-bottom: -12px;
             pointer-events: none;
         }
 
@@ -1865,8 +1867,14 @@
             let poolKey = `${STATE.currentTab}:${STATE.randomListeningMode}`;
             if (STATE.currentTab === 'characters') {
                 const cat = document.getElementById('charCategory').value;
-                pool = ITEMS[cat];
+                const useMemorizationOrder = cat === 'letters' &&
+                    STATE.randomListeningMode === 'sequential' &&
+                    STATE.letterMemorizationOrder;
+                pool = useMemorizationOrder ? LETTER_MEMORIZATION_ORDER : ITEMS[cat];
                 poolKey += `:${cat}`;
+                if (cat === 'letters' && STATE.randomListeningMode === 'sequential') {
+                    poolKey += useMemorizationOrder ? ':memorization' : ':alphabetical';
+                }
             } else if (STATE.currentTab === 'qcodes') {
                 pool = QCODES.map(q => q.code);
             }
@@ -2062,7 +2070,14 @@
             '(': '여는 괄호',
             ')': '닫는 괄호'
         };
-        const LETTER_MEMORIZATION_ORDER = "ETIMANSOUDKRWGFLQYBVHPXCZJ".split("");
+        const LETTER_MEMORIZATION_GROUPS = ["ET", "IA", "NM", "SURW", "DKGO", "HVF", "LPJ", "BXCY", "ZQ"];
+        const LETTER_MEMORIZATION_ORDER = LETTER_MEMORIZATION_GROUPS.join("").split("");
+        const LETTER_MEMORIZATION_ROW_STARTS = new Set();
+        let letterRowStart = 0;
+        LETTER_MEMORIZATION_GROUPS.slice(0, -1).forEach(group => {
+            letterRowStart += group.length;
+            LETTER_MEMORIZATION_ROW_STARTS.add(letterRowStart);
+        });
 
         const QCODES = [
             { code: "CQ", meaning: { ko: "아무 스테이션 호출", en: "Call any station" } },
@@ -2398,11 +2413,12 @@
                 ? LETTER_MEMORIZATION_ORDER
                 : ITEMS[category];
             characters.forEach((char, index) => {
-                if (category === 'letters' && STATE.letterMemorizationOrder && [6,11,21].includes(index)) {
-                    const spacer = document.createElement('div');
-                    spacer.className = 'item-card-spacer';
-                    spacer.setAttribute('aria-hidden', 'true');
-                    grid.appendChild(spacer);
+                if (category === 'letters' && STATE.letterMemorizationOrder &&
+                    LETTER_MEMORIZATION_ROW_STARTS.has(index)) {
+                    const rowBreak = document.createElement('div');
+                    rowBreak.className = 'item-card-row-break';
+                    rowBreak.setAttribute('aria-hidden', 'true');
+                    grid.appendChild(rowBreak);
                 }
 
                 const card = document.createElement('div');
