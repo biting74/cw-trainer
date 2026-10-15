@@ -1033,8 +1033,11 @@
                         <option value="special" data-i18n="cat_special">특수 기호</option>
                     </select>
                     <button class="btn" id="letterOrderToggle" type="button" aria-pressed="false" data-i18n="letter_order_alpha">알파벳순</button>
-                    <button class="btn btn-primary" id="charSequentialListeningBtn" type="button" aria-pressed="false" data-i18n="btn_sequential_listening_start">▶️ 순차 듣기 시작</button>
-                    <button class="btn btn-primary" id="charRandomListeningBtn" type="button" aria-pressed="false" data-i18n="btn_random_listening_start">🎧 랜덤 듣기 시작</button>
+                    <button class="btn btn-primary" id="charListeningPracticeBtn" type="button" aria-pressed="false" data-i18n="btn_listening_practice_start">▶️ 듣기 연습 시작</button>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="charRandomListeningToggle" checked>
+                        <span data-i18n="label_random_listening">랜덤 듣기</span>
+                    </label>
                 </div>
                 <div id="charWakeLockStatus" role="status" aria-live="polite" style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;"></div>
 
@@ -1051,8 +1054,11 @@
                 </div>
 
                 <div class="character-controls">
-                    <button class="btn btn-primary" id="qcodeSequentialListeningBtn" type="button" aria-pressed="false" data-i18n="btn_sequential_listening_start">▶️ 순차 듣기 시작</button>
-                    <button class="btn btn-primary" id="qcodeRandomListeningBtn" type="button" aria-pressed="false" data-i18n="btn_random_listening_start">🎧 랜덤 듣기 시작</button>
+                    <button class="btn btn-primary" id="qcodeListeningPracticeBtn" type="button" aria-pressed="false" data-i18n="btn_listening_practice_start">▶️ 듣기 연습 시작</button>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="qcodeRandomListeningToggle" checked>
+                        <span data-i18n="label_random_listening">랜덤 듣기</span>
+                    </label>
                     <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
                         <input type="checkbox" id="qcodePlayMorseToggle" checked>
                         <span data-i18n="label_qcode_play_morse">모스부호 재생</span>
@@ -1255,9 +1261,9 @@
                 cat_special: "특수 기호",
                 letter_order_alpha: "알파벳순",
                 letter_order_memorization: "암기순",
-                btn_random_listening_start: "🎧 랜덤 듣기 시작",
                 btn_random_listening_stop: "🛑 듣기 중지",
-                btn_sequential_listening_start: "▶️ 순차 듣기 시작",
+                btn_listening_practice_start: "▶️ 듣기 연습 시작",
+                label_random_listening: "랜덤 듣기",
                 btn_random_listening_pause: "⏸️ 일시정지",
                 btn_random_listening_resume: "▶️ 계속 듣기",
                 listening_progress: "재생 {played}/{total} · 반복 {rounds}회",
@@ -1353,9 +1359,9 @@
                 cat_special: "Special Characters",
                 letter_order_alpha: "Alphabetical",
                 letter_order_memorization: "Memorization",
-                btn_random_listening_start: "🎧 Start Listening",
                 btn_random_listening_stop: "🛑 Stop Listening",
-                btn_sequential_listening_start: "▶️ Start Sequential",
+                btn_listening_practice_start: "▶️ Start Listening Practice",
+                label_random_listening: "Random listening",
                 btn_random_listening_pause: "⏸️ Pause",
                 btn_random_listening_resume: "▶️ Resume",
                 listening_progress: "Played {played}/{total} · Rounds {rounds}",
@@ -1485,6 +1491,7 @@
                 speechRate: STATE.speechRate,
                 qcodeReadMeaning: document.getElementById('qcodeReadMeaningToggle').checked,
                 qcodePlayMorse: document.getElementById('qcodePlayMorseToggle').checked,
+                randomListeningMode: STATE.randomListeningMode,
                 paddleReverse: STATE.paddleReverse
             };
             setCookie('cw_trainer_global_settings', JSON.stringify(settings), 90);
@@ -1717,20 +1724,17 @@
 
         function updateListeningButtons() {
             [
-                ['charSequentialListeningBtn', 'sequential'],
-                ['qcodeSequentialListeningBtn', 'sequential'],
-                ['charRandomListeningBtn', 'random'],
-                ['qcodeRandomListeningBtn', 'random']
-            ].forEach(([listenId, mode]) => {
+                ['charListeningPracticeBtn', 'charRandomListeningToggle'],
+                ['qcodeListeningPracticeBtn', 'qcodeRandomListeningToggle']
+            ].forEach(([listenId, toggleId]) => {
                 const button = document.getElementById(listenId);
-                const isActiveMode = STATE.randomListeningActive && STATE.randomListeningMode === mode;
-                button.dataset.i18n = isActiveMode
+                const modeToggle = document.getElementById(toggleId);
+                modeToggle.checked = STATE.randomListeningMode === 'random';
+                modeToggle.disabled = STATE.randomListeningActive;
+                button.dataset.i18n = STATE.randomListeningActive
                     ? 'btn_random_listening_stop'
-                    : mode === 'sequential'
-                        ? 'btn_sequential_listening_start'
-                        : 'btn_random_listening_start';
-                button.disabled = STATE.randomListeningActive && !isActiveMode;
-                button.setAttribute('aria-pressed', String(isActiveMode && !STATE.randomListeningPaused));
+                    : 'btn_listening_practice_start';
+                button.setAttribute('aria-pressed', String(STATE.randomListeningActive && !STATE.randomListeningPaused));
             });
             const pauseButton = document.getElementById('randomListeningPauseBtn');
             pauseButton.dataset.i18n = STATE.randomListeningPaused
@@ -1919,13 +1923,15 @@
             }
         }
 
-        function toggleListening(mode) {
+        function toggleListening() {
             if (STATE.randomListeningActive) {
-                if (STATE.randomListeningMode === mode) stopRandomListening();
+                stopRandomListening();
                 return;
             }
             STATE.randomListeningActive = true;
-            STATE.randomListeningMode = mode;
+            STATE.randomListeningMode = document.getElementById('charRandomListeningToggle').checked
+                ? 'random'
+                : 'sequential';
             if (STATE.randomListeningActive) {
                 STATE.randomListeningDeck = [];
                 STATE.randomListeningPoolKey = null;
@@ -2994,6 +3000,13 @@
                         STATE.qcodePlayMorse = !Boolean(settings.qcodeSkipMorse);
                         document.getElementById('qcodePlayMorseToggle').checked = STATE.qcodePlayMorse;
                     }
+                    if (settings.randomListeningMode === 'random' || settings.randomListeningMode === 'sequential') {
+                        STATE.randomListeningMode = settings.randomListeningMode;
+                        document.getElementById('charRandomListeningToggle').checked =
+                            STATE.randomListeningMode === 'random';
+                        document.getElementById('qcodeRandomListeningToggle').checked =
+                            STATE.randomListeningMode === 'random';
+                    }
                     if (settings.speechVoiceURIs && typeof settings.speechVoiceURIs === 'object') {
                         STATE.speechVoiceURIs = {
                             ko: typeof settings.speechVoiceURIs.ko === 'string' ? settings.speechVoiceURIs.ko : '',
@@ -3118,10 +3131,17 @@
             slider.addEventListener('input', updateDefaultSliderStyles);
         });
 
-        document.getElementById('charSequentialListeningBtn').onclick = () => toggleListening('sequential');
-        document.getElementById('qcodeSequentialListeningBtn').onclick = () => toggleListening('sequential');
-        document.getElementById('charRandomListeningBtn').onclick = () => toggleListening('random');
-        document.getElementById('qcodeRandomListeningBtn').onclick = () => toggleListening('random');
+        ['charRandomListeningToggle', 'qcodeRandomListeningToggle'].forEach(toggleId => {
+            document.getElementById(toggleId).onchange = event => {
+                if (STATE.randomListeningActive) return;
+                STATE.randomListeningMode = event.target.checked ? 'random' : 'sequential';
+                document.getElementById('charRandomListeningToggle').checked = event.target.checked;
+                document.getElementById('qcodeRandomListeningToggle').checked = event.target.checked;
+                saveGlobalSettings();
+            };
+        });
+        document.getElementById('charListeningPracticeBtn').onclick = toggleListening;
+        document.getElementById('qcodeListeningPracticeBtn').onclick = toggleListening;
         document.getElementById('randomListeningPauseBtn').onclick = pauseRandomListening;
         document.getElementById('randomListeningStopBtn').onclick = stopRandomListening;
 
@@ -3179,6 +3199,9 @@
             document.getElementById('qcodePlayMorseToggle').checked = true;
             STATE.qcodeReadMeaning = false;
             STATE.qcodePlayMorse = true;
+            STATE.randomListeningMode = 'random';
+            document.getElementById('charRandomListeningToggle').checked = true;
+            document.getElementById('qcodeRandomListeningToggle').checked = true;
 
             saveGlobalSettings();
             updateUI('ko');
